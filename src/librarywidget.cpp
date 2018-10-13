@@ -44,11 +44,10 @@ LibraryWidget::LibraryWidget(QWidget *parent) : QWidget(parent), ui(new Ui::Libr
     trackListTableView_->setSelectionMode(QAbstractItemView::SingleSelection);
     trackListTableView_->setColumnWidth(0, 35);
     trackListTableView_->setShowGrid(false);
-    connect(trackListTableView_, &QTableView::doubleClicked, this,
-            [this](const QModelIndex &index) {
-                QString trackId = index.data(TrackListModel::TrackId).toString();
-                emit play(trackId);
-            });
+    connect(trackListTableView_, &QTableView::activated, this, [this](const QModelIndex &index) {
+        QString trackId = index.data(TrackListModel::TrackId).toString();
+        emit play(trackId);
+    });
 
     //    auto rightSplitter = new QSplitter;
     //    rightSplitter->setOrientation(Qt::Vertical);

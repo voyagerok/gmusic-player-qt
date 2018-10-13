@@ -27,6 +27,7 @@ public slots:
     void handlePlayerStateChanged(int state);
     void handleDuratioChanged(qint64 duration);
     void handlePositionChanged(qint64 position);
+    void handlePlayerIsSeekableChanged(bool seekable);
 
 signals:
     void seek(qint64 msec);
@@ -46,6 +47,8 @@ private:
     //    QLabel *imgLabel_;
     QSlider *progressSlider_;
     QLabel *timeLabel_;
+
+    bool playerIsSeekable_;
 
     Database *db_;
     QString currentTrackId_;

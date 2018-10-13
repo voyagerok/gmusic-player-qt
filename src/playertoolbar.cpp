@@ -49,11 +49,12 @@ PlayerToolbar::PlayerToolbar(QWidget *parent)
     progressSlider_->setStyle(new MyStyle(progressSlider_->style()));
     progressSlider_->setOrientation(Qt::Horizontal);
     connect(progressSlider_, &QSlider::actionTriggered, this, [this](int action) {
-        qDebug() << "action triggered:" << action;
-        if (action == QAbstractSlider::SliderMove ||
-            action == QAbstractSlider::SliderSingleStepAdd ||
-            action == QAbstractSlider::SliderSingleStepSub) {
-            emit seek(progressSlider_->sliderPosition() * 1000);
+        if (playerIsSeekable_) {
+            if (action == QAbstractSlider::SliderMove ||
+                action == QAbstractSlider::SliderSingleStepAdd ||
+                action == QAbstractSlider::SliderSingleStepSub) {
+                emit seek(progressSlider_->sliderPosition() * 1000);
+            }
         }
     });
 
@@ -117,4 +118,9 @@ void PlayerToolbar::handlePositionChanged(qint64 pos)
     progressSlider_->setValue(posSec);
     timeLabel_->setText(
         QString("%1 / %2").arg(Utils::TimeFormat(posSec)).arg(Utils::TimeFormat(trackDuration_)));
+}
+
+void PlayerToolbar::handlePlayerIsSeekableChanged(bool seekable)
+{
+    playerIsSeekable_ = seekable;
 }

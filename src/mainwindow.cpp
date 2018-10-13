@@ -162,6 +162,8 @@ void MainWindow::setupToolbar()
             &PlayerToolbar::handleDuratioChanged);
     connect(player_, &QMediaPlayer::positionChanged, toolbar_,
             &PlayerToolbar::handlePositionChanged);
+    connect(player_, &QMediaPlayer::seekableChanged, toolbar_,
+            &PlayerToolbar::handlePlayerIsSeekableChanged);
     connect(user_, &User::databasePathChanged, toolbar_, &PlayerToolbar::setDatabasePath);
     connect(toolbar_, &PlayerToolbar::play, ui->libraryPage, &LibraryWidget::playCurrent);
     connect(toolbar_, &PlayerToolbar::pause, player_, &QMediaPlayer::pause);
@@ -202,22 +204,38 @@ void MainWindow::handlePlayerStateChanged(int state)
 
 void MainWindow::handleRewindRequest()
 {
-    player_->setPosition(0);
-    player_->play();
+    if (player_->isSeekable()) {
+        player_->setPosition(0);
+        player_->play();
+    } else {
+        qDebug() << __FUNCTION__ << ": player not seekable";
+    }
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Left || event->key() == Qt::Key_Right) {
-        qint64 change = 0;
-        if (event->modifiers() & Qt::KeyboardModifier::ControlModifier) {
-            change = 5 * 1000;
+        if (player_->isSeekable()) {
+            qint64 change = 0;
+            if (event->modifiers() & Qt::KeyboardModifier::ControlModifier) {
+                change = 5 * 1000;
+            } else {
+                change = 1 * 1000;
+            }
+            if (event->key() == Qt::Key_Left) {
+                change *= -1;
+            }
+            player_->setPosition(player_->position() + change);
         } else {
-            change = 1 * 1000;
+            qDebug() << __FUNCTION__ << ": player not seekable";
         }
-        if (event->key() == Qt::Key_Left) {
-            change *= -1;
+    } else if (event->key() == Qt::Key_Comma) {
+        if (event->modifiers() & Qt::ShiftModifier) {
+            ui->libraryPage->playPrev();
         }
-        player_->setPosition(player_->position() + change);
+    } else if (event->key() == Qt::Key_Period) {
+        if (event->modifiers() & Qt::ShiftModifier) {
+            ui->libraryPage->playNext();
+        }
     }
 }
