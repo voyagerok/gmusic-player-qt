@@ -8,6 +8,7 @@
 #include <QSortFilterProxyModel>
 #include <QSplitter>
 #include <QTableView>
+#include <QTimer>
 #include <QToolBar>
 #include <QTreeView>
 
@@ -120,7 +121,7 @@ void LibraryWidget::playPrev()
         return;
     }
 
-    if (currentPlayerPos_ > 2 * 1000) {
+    if (currentTrackPos_ > 2 * 1000) {
         emit playerRewind();
         return;
     }
@@ -142,6 +143,7 @@ void LibraryWidget::setCurrentTrackId(const QString &currentTrack)
 
 void LibraryWidget::handlePLayerDurationChanged(qint64 duration)
 {
+    currentTrackDuration_ = duration;
 }
 
 void LibraryWidget::handlePLayerVolumeChanged(int volume)
@@ -154,7 +156,7 @@ void LibraryWidget::handlePlayerMutedChanged(bool muted)
 
 void LibraryWidget::handlePlayerPositionChanged(qint64 position)
 {
-    currentPlayerPos_ = position;
+    currentTrackPos_ = position;
 }
 
 void LibraryWidget::handlePlayerSeekableChanged(bool seekable)
@@ -170,6 +172,10 @@ void LibraryWidget::handlePlayerStateChanged(int state)
         if (index.isValid()) {
             trackListTableView_->selectionModel()->setCurrentIndex(
                 index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+        }
+    } else if (state == QMediaPlayer::StoppedState) {
+        if (currentTrackPos_ == currentTrackDuration_) {
+            playNext();
         }
     }
     currentPlayerState_ = state;

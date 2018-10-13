@@ -54,7 +54,8 @@ private:
     QTableView *trackListTableView_;
 
     QString currentTrackId_;
-    qint64 currentPlayerPos_;
+    qint64 currentTrackPos_;
+    qint64 currentTrackDuration_;
     int currentPlayerState_;
 };
 

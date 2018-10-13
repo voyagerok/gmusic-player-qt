@@ -50,6 +50,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             &LibraryWidget::handlePlayerStateChanged);
     connect(player_, &QMediaPlayer::positionChanged, ui->libraryPage,
             &LibraryWidget::handlePlayerPositionChanged);
+    connect(player_, &QMediaPlayer::durationChanged, ui->libraryPage,
+            &LibraryWidget::handlePLayerDurationChanged);
     connect(player_, &QMediaPlayer::stateChanged, this, &MainWindow::handlePlayerStateChanged);
 
     settingsModel_->load();
