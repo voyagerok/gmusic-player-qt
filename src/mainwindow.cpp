@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QKeyEvent>
 #include <QLabel>
 #include <QMediaPlayer>
 #include <QTimer>
@@ -46,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     applyVolume(50);
     connect(ui->libraryPage, &LibraryWidget::play, this, &MainWindow::handlePlayRequest);
     connect(ui->libraryPage, &LibraryWidget::playerRewind, this, &MainWindow::handleRewindRequest);
+    connect(ui->libraryPage, &LibraryWidget::playerResume, player_, &QMediaPlayer::play);
     connect(player_, &QMediaPlayer::stateChanged, ui->libraryPage,
             &LibraryWidget::handlePlayerStateChanged);
     connect(player_, &QMediaPlayer::positionChanged, ui->libraryPage,
@@ -165,6 +167,7 @@ void MainWindow::setupToolbar()
     connect(toolbar_, &PlayerToolbar::pause, player_, &QMediaPlayer::pause);
     connect(toolbar_, &PlayerToolbar::next, ui->libraryPage, &LibraryWidget::playNext);
     connect(toolbar_, &PlayerToolbar::prev, ui->libraryPage, &LibraryWidget::playPrev);
+    connect(toolbar_, &PlayerToolbar::seek, player_, &QMediaPlayer::setPosition);
     addToolBar(Qt::ToolBarArea::TopToolBarArea, toolbar_);
 }
 
@@ -201,4 +204,20 @@ void MainWindow::handleRewindRequest()
 {
     player_->setPosition(0);
     player_->play();
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Left || event->key() == Qt::Key_Right) {
+        qint64 change = 0;
+        if (event->modifiers() & Qt::KeyboardModifier::ControlModifier) {
+            change = 5 * 1000;
+        } else {
+            change = 1 * 1000;
+        }
+        if (event->key() == Qt::Key_Left) {
+            change *= -1;
+        }
+        player_->setPosition(player_->position() + change);
+    }
 }

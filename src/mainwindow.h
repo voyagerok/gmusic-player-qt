@@ -46,6 +46,9 @@ private slots:
 signals:
     void playbackStarted(const QString &trackId);
 
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+
 private:
     Ui::MainWindow *ui;
     User *user_;

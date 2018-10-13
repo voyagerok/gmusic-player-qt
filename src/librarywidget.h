@@ -26,6 +26,7 @@ public:
 signals:
     void play(const QString &trackId);
     void playerRewind();
+    void playerResume();
 
 public slots:
     void setDatabasePath(const QString &);

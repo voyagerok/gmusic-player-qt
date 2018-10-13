@@ -37,22 +37,25 @@ PlayerToolbar::PlayerToolbar(QWidget *parent)
 
     playAction_  = addAction(appStyle->standardIcon(QStyle::SP_MediaPlay), tr("Play"));
     pauseAction_ = addAction(appStyle->standardIcon(QStyle::SP_MediaPause), tr("Pause"));
-    nextAction_  = addAction(appStyle->standardIcon(QStyle::SP_MediaSkipForward), tr("Play next"));
     prevAction_ =
         addAction(appStyle->standardIcon(QStyle::SP_MediaSkipBackward), tr("Play previous"));
+    nextAction_ = addAction(appStyle->standardIcon(QStyle::SP_MediaSkipForward), tr("Play next"));
     connect(playAction_, &QAction::triggered, this, &PlayerToolbar::play);
     connect(pauseAction_, &QAction::triggered, this, &PlayerToolbar::pause);
     connect(nextAction_, &QAction::triggered, this, &PlayerToolbar::next);
     connect(prevAction_, &QAction::triggered, this, &PlayerToolbar::prev);
 
-    //    imgLabel_ = new QLabel(this);
-    //    imgLabel_->setMinimumSize(64, 64);
-    //    imgLabel_->setMaximumSize(64, 64);
-    //    addWidget(imgLabel_);
-
     progressSlider_ = new QSlider;
     progressSlider_->setStyle(new MyStyle(progressSlider_->style()));
     progressSlider_->setOrientation(Qt::Horizontal);
+    connect(progressSlider_, &QSlider::actionTriggered, this, [this](int action) {
+        qDebug() << "action triggered:" << action;
+        if (action == QAbstractSlider::SliderMove ||
+            action == QAbstractSlider::SliderSingleStepAdd ||
+            action == QAbstractSlider::SliderSingleStepSub) {
+            emit seek(progressSlider_->sliderPosition() * 1000);
+        }
+    });
 
     addWidget(progressSlider_);
     timeLabel_ = new QLabel;
@@ -89,27 +92,12 @@ void PlayerToolbar::handlePlayerStateChanged(int state)
 
 void PlayerToolbar::handlePlaybackStarted()
 {
-    //    imgLabel_->setHidden(false);
     progressSlider_->setHidden(false);
     timeLabel_->setHidden(false);
-
-    //    if (auto track = db_->track(currentTrackId_)) {
-    //        if (auto album = db_->album(track->albumId)) {
-
-    //            QByteArray imgData = imageStorage_.tryGetImage(album->albumArtRef);
-    //            if (!imgData.isEmpty()) {
-    //                QPixmap img;
-    //                if (img.loadFromData(imgData)) {
-    //                    imgLabel_->setPixmap(img.scaled(64, 64, Qt::KeepAspectRatio));
-    //                }
-    //            }
-    //        }
-    //    }
 }
 
 void PlayerToolbar::handlePlaybackStopped()
 {
-    //    imgLabel_->setHidden(true);
     progressSlider_->setHidden(true);
     timeLabel_->setHidden(true);
 }

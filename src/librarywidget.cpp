@@ -90,6 +90,11 @@ void LibraryWidget::reloadData()
 
 void LibraryWidget::playCurrent()
 {
+    if (currentPlayerState_ == QMediaPlayer::PausedState) {
+        emit playerResume();
+        return;
+    }
+
     QModelIndexList indexes = trackListTableView_->selectionModel()->selectedIndexes();
     if (!indexes.isEmpty()) {
         QString trackId = indexes.at(0).data(TrackListModel::TrackId).toString();
