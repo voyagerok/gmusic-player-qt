@@ -32,8 +32,9 @@ private:
     QString imageCacheDirPath_;
     QSet<QString> activeDownloads_;
     qint64 failureCounter_;
+    bool initialized_;
 
-    void createDatabaseSchema();
+    bool createDatabaseSchema();
     void insertCacheEntry(const QString &url, const QString &filepath);
     void removeCacheEntry(const QString &filePath, const QString &url);
     void downloadImage(const QString &url);

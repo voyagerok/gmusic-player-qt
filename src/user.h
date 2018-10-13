@@ -168,7 +168,7 @@ private:
     bool syncInProgress_;
     QThread *syncThread_;
 
-    void createUserData();
+    bool createUserData();
 };
 
 #endif // USER_H

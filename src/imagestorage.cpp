@@ -24,7 +24,8 @@ ImageStorage &ImageStorage::instance()
     return storage;
 }
 
-ImageStorage::ImageStorage(QObject *parent) : QObject(parent), failureCounter_(0)
+ImageStorage::ImageStorage(QObject *parent)
+    : QObject(parent), failureCounter_(0), initialized_(false)
 {
     manager_ = new QNetworkAccessManager(this);
 
@@ -32,6 +33,7 @@ ImageStorage::ImageStorage(QObject *parent) : QObject(parent), failureCounter_(0
     QString dataPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).at(0);
     if (!dataDir.exists(dataPath) && !dataDir.mkdir(dataPath)) {
         qDebug() << __PRETTY_FUNCTION__ << ": could not create data dir";
+        return;
     }
     dataDir.cd(dataPath);
 
@@ -39,10 +41,12 @@ ImageStorage::ImageStorage(QObject *parent) : QObject(parent), failureCounter_(0
     QString cachePath = QStandardPaths::standardLocations(QStandardPaths::CacheLocation).at(0);
     if (!cacheDir.exists(cachePath) && !cacheDir.mkdir(cachePath)) {
         qDebug() << __PRETTY_FUNCTION__ << ": could not create cache dir";
+        return;
     }
     cacheDir.cd(cachePath);
-    if (!cacheDir.mkdir("images")) {
+    if (!cacheDir.exists("images") && !cacheDir.mkdir("images")) {
         qDebug() << __PRETTY_FUNCTION__ << ": could not create image cache dir";
+        return;
     }
     cacheDir.cd("images");
     imageCacheDirPath_ = cacheDir.absolutePath();
@@ -51,23 +55,33 @@ ImageStorage::ImageStorage(QObject *parent) : QObject(parent), failureCounter_(0
     db_.setDatabaseName(dataDir.filePath("image_storage.sqlite"));
     if (!db_.open()) {
         qDebug() << __PRETTY_FUNCTION__ << ": could not open database:" << db_.lastError();
+        return;
     }
-    createDatabaseSchema();
+    if (!createDatabaseSchema()) {
+        qDebug() << __PRETTY_FUNCTION__ << ": could not create database schema";
+        return;
+    }
+    initialized_ = true;
 }
 
 ImageStorage::~ImageStorage()
 {
 }
 
-void ImageStorage::createDatabaseSchema()
+bool ImageStorage::createDatabaseSchema()
 {
     QSqlQuery query(db_);
-    query.exec(QStringLiteral("CREATE TABLE IF NOT EXISTS ImageCacheMetadata(url TEXT "
-                              "PRIMARY KEY, localPath TEXT NOT NULL, timestamp INTEGER NOT NULL)"));
+    return query.exec(
+        QStringLiteral("CREATE TABLE IF NOT EXISTS ImageCacheMetadata(url TEXT "
+                       "PRIMARY KEY, localPath TEXT NOT NULL, timestamp INTEGER NOT NULL)"));
 }
 
 QByteArray ImageStorage::tryGetImage(const QString &url)
 {
+    if (!initialized_) {
+        return QByteArray();
+    }
+
     QSqlQuery query(db_);
     query.prepare(QStringLiteral("SELECT localPath FROM ImageCacheMetadata WHERE url = :url"));
     query.bindValue(":url", url);

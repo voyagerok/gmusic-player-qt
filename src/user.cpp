@@ -189,8 +189,11 @@ void User::getAuthToken()
         if (status == ProxyResult::OK) {
             setAuthToken(result.toString());
             if (!deviceId_.isEmpty()) {
-                this->createUserData();
-                this->authorizedChanged(this->authorized());
+                if (this->createUserData()) {
+                    this->authorizedChanged(this->authorized());
+                } else {
+                    emit this->errorOccured(tr("Could not create directory for user data"));
+                }
             } else {
                 this->extractDeviceId();
             }
@@ -210,8 +213,11 @@ void User::extractDeviceId()
             GMDeviceList devices = result.value<GMDeviceList>();
             QString id           = devices[0].id.replace(QRegExp("^0x"), "");
             setDeviceId(id);
-            this->createUserData();
-            this->authorizedChanged(this->authorized());
+            if (this->createUserData()) {
+                this->authorizedChanged(this->authorized());
+            } else {
+                emit this->errorOccured(tr("Could not create directory for user data"));
+            }
         } else {
             qDebug() << "Could not extract device id: " << result.toString();
             emit this->errorOccured(tr("Could not extract registered devices"));
@@ -232,13 +238,14 @@ void User::sync()
                               Q_ARG(QString, databasePath_));
 }
 
-void User::createUserData()
+bool User::createUserData()
 {
     QDir dataDir;
     QString appDataLocation = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     if (!dataDir.exists(appDataLocation) && !dataDir.mkpath(appDataLocation)) {
         qDebug() << __FUNCTION__ << ": "
                  << "could not create app data directory";
+        return false;
     }
     dataDir.cd(appDataLocation);
 
@@ -251,38 +258,24 @@ void User::createUserData()
     if (!dataDir.exists(userDir) && !dataDir.mkdir(userDir)) {
         qDebug() << __FUNCTION__ << ": "
                  << "could not create user data directory";
+        return false;
     }
     dataDir.cd(userDir);
 
     QString dbPath = dataDir.filePath(QStringLiteral("storage.sqlite"));
     if (!db_.openConnection(dbPath, Utils::ThreadId())) {
         qDebug() << __FUNCTION__ << ": could not open database connection";
-        return;
+        return false;
     }
     if (!db_.createTables()) {
         qDebug() << __FUNCTION__ << ": could not create tables";
+        return false;
     }
     setDatabasePath(dbPath);
+    return true;
 }
 
 void User::requestSyncInterruption()
 {
     syncThread_->requestInterruption();
 }
-
-// void User::play(const QString &trackId)
-//{
-//    ProxyResult *proxy = api_.streamUrl(authToken_, trackId, deviceId_);
-//    connect(proxy, &ProxyResult::ready, this, [this](int status, QVariant result) {
-//        if (status == ProxyResult::Error) {
-//            qDebug() << "Failed to get stream url: " << result.toString();
-//            emit this->errorOccured(tr("Could not play song"));
-//            return;
-//        }
-//        if (player_->state() == QMediaPlayer::State::PlayingState) {
-//            player_->stop();
-//        }
-//        player_->setMedia(QUrl(result.toString()));
-//        player_->play();
-//    });
-//}
