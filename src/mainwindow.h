@@ -37,6 +37,7 @@ private slots:
     void openLibraryPage();
 
     void handlePlayRequest(const QString &trackId);
+    void handleRewindRequest();
     void applyVolume(int volume);
     void setCurrentTrack(const QString &id);
 

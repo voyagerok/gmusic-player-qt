@@ -4,6 +4,7 @@
 #include <QHeaderView>
 #include <QLayout>
 #include <QListView>
+#include <QMediaPlayer>
 #include <QSortFilterProxyModel>
 #include <QSplitter>
 #include <QTableView>
@@ -99,7 +100,14 @@ void LibraryWidget::playCurrent()
 
 void LibraryWidget::playNext()
 {
-    QModelIndex next = trackListModel_->getNext(currentTrackId_);
+    if (currentPlayerState_ == QMediaPlayer::StoppedState) {
+        return;
+    }
+
+    auto proxyModel = qobject_cast<TrackListSortingModel *>(trackListTableView_->model());
+    QModelIndex current =
+        proxyModel->mapFromSource(trackListModel_->getIndexForId(currentTrackId_));
+    QModelIndex next = proxyModel->index(current.row() + 1, current.column());
     if (next.isValid()) {
         QString nextTrackId = next.data(TrackListModel::TrackId).toString();
         emit play(nextTrackId);
@@ -108,7 +116,19 @@ void LibraryWidget::playNext()
 
 void LibraryWidget::playPrev()
 {
-    QModelIndex prev = trackListModel_->getPrev(currentTrackId_);
+    if (currentPlayerState_ == QMediaPlayer::StoppedState) {
+        return;
+    }
+
+    if (currentPlayerPos_ > 2 * 1000) {
+        emit playerRewind();
+        return;
+    }
+
+    auto proxyModel = qobject_cast<TrackListSortingModel *>(trackListTableView_->model());
+    QModelIndex current =
+        proxyModel->mapFromSource(trackListModel_->getIndexForId(currentTrackId_));
+    QModelIndex prev = proxyModel->index(current.row() - 1, current.column());
     if (prev.isValid()) {
         QString prevTrackId = prev.data(TrackListModel::TrackId).toString();
         emit play(prevTrackId);
@@ -134,6 +154,7 @@ void LibraryWidget::handlePlayerMutedChanged(bool muted)
 
 void LibraryWidget::handlePlayerPositionChanged(qint64 position)
 {
+    currentPlayerPos_ = position;
 }
 
 void LibraryWidget::handlePlayerSeekableChanged(bool seekable)
@@ -142,9 +163,18 @@ void LibraryWidget::handlePlayerSeekableChanged(bool seekable)
 
 void LibraryWidget::handlePlayerStateChanged(int state)
 {
+    if (state == QMediaPlayer::PlayingState) {
+        auto proxyModel = qobject_cast<TrackListSortingModel *>(trackListTableView_->model());
+        QModelIndex index =
+            proxyModel->mapFromSource(trackListModel_->getIndexForId(currentTrackId_));
+        if (index.isValid()) {
+            trackListTableView_->selectionModel()->setCurrentIndex(
+                index, QItemSelectionModel::SelectCurrent | QItemSelectionModel::Rows);
+        }
+    }
+    currentPlayerState_ = state;
 }
 
 void LibraryWidget::setupToolbar(QToolBar *appToolbar)
 {
-    //    appToolbar->ad
 }

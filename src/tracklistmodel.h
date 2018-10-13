@@ -47,7 +47,6 @@ private slots:
 private:
     inline QVariant albumString(const GMTrack &track) const;
     inline QVariant artistString(const GMTrack &track) const;
-    //    static QString albumUrl(const GMTrack ) const;
 
     static Opt<GMTrackList> loadAllTracks(Database &);
 

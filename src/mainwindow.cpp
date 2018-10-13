@@ -45,8 +45,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     player_ = new QMediaPlayer(this);
     applyVolume(50);
     connect(ui->libraryPage, &LibraryWidget::play, this, &MainWindow::handlePlayRequest);
+    connect(ui->libraryPage, &LibraryWidget::playerRewind, this, &MainWindow::handleRewindRequest);
     connect(player_, &QMediaPlayer::stateChanged, ui->libraryPage,
             &LibraryWidget::handlePlayerStateChanged);
+    connect(player_, &QMediaPlayer::positionChanged, ui->libraryPage,
+            &LibraryWidget::handlePlayerPositionChanged);
     connect(player_, &QMediaPlayer::stateChanged, this, &MainWindow::handlePlayerStateChanged);
 
     settingsModel_->load();
@@ -190,4 +193,10 @@ void MainWindow::handlePlayerStateChanged(int state)
     } else if (state == QMediaPlayer::StoppedState) {
         setWindowTitle(qApp->applicationName());
     }
+}
+
+void MainWindow::handleRewindRequest()
+{
+    player_->setPosition(0);
+    player_->play();
 }

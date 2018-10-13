@@ -25,6 +25,7 @@ public:
 
 signals:
     void play(const QString &trackId);
+    void playerRewind();
 
 public slots:
     void setDatabasePath(const QString &);
@@ -51,7 +52,10 @@ private:
     LibraryModel *libraryModel_;
     TrackListModel *trackListModel_;
     QTableView *trackListTableView_;
+
     QString currentTrackId_;
+    qint64 currentPlayerPos_;
+    int currentPlayerState_;
 };
 
 #endif // LIBRARYWIDGET_H
