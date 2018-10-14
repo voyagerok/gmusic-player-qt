@@ -1,6 +1,7 @@
 #ifndef GMAPI_H
 #define GMAPI_H
 
+#include <QLocale>
 #include <QNetworkAccessManager>
 #include <QObject>
 #include <functional>
@@ -34,6 +35,7 @@ public:
 private:
     QNetworkAccessManager *accessManager_;
     QString tracksNextPageToken_;
+    QLocale systemLocale_;
 };
 
 Q_DECLARE_METATYPE(GMTrackList)

@@ -33,7 +33,9 @@ static bool get_string_value(QNetworkReply *reply, const QString &key, QString &
 ProxyResult *GMApi::masterToken(const QString &email, const QString &deviceId,
                                 const QString &passwd)
 {
-    QString encPasswd = Utils::EncryptPasswd(email, passwd);
+    QString encPasswd     = Utils::EncryptPasswd(email, passwd);
+    QString localeCountry = systemLocale_.countryToString(systemLocale_.country());
+    QString localeLang    = systemLocale_.languageToString(systemLocale_.language());
 
     QUrlQuery post_data;
     post_data.addQueryItem("accountType", "HOSTED_OR_GOOGLE");
@@ -41,9 +43,9 @@ ProxyResult *GMApi::masterToken(const QString &email, const QString &deviceId,
     post_data.addQueryItem("add_account", "1");
     post_data.addQueryItem("service", "ac2dm");
     post_data.addQueryItem("source", "android");
-    post_data.addQueryItem("device_country", "us");
-    post_data.addQueryItem("operatorCountry", "us");
-    post_data.addQueryItem("lang", "en");
+    post_data.addQueryItem("device_country", localeCountry);
+    post_data.addQueryItem("operatorCountry", localeCountry);
+    post_data.addQueryItem("lang", localeLang);
     post_data.addQueryItem("sdk_version", "17");
     post_data.addQueryItem("Email", email);
     post_data.addQueryItem("EncryptedPasswd", encPasswd);
@@ -78,6 +80,9 @@ ProxyResult *GMApi::masterToken(const QString &email, const QString &deviceId,
 ProxyResult *GMApi::authToken(const QString &email, const QString &deviceId,
                               const QString &masterToken)
 {
+    QString localeCountry = systemLocale_.countryToString(systemLocale_.country());
+    QString localeLang    = systemLocale_.languageToString(systemLocale_.language());
+
     QUrlQuery post_data;
     post_data.addQueryItem("accountType", "HOSTED_OR_GOOGLE");
     post_data.addQueryItem("has_permission", "1");
@@ -85,9 +90,9 @@ ProxyResult *GMApi::authToken(const QString &email, const QString &deviceId,
     post_data.addQueryItem("source", "android");
     post_data.addQueryItem("app", "com.google.android.music");
     post_data.addQueryItem("client_sig", "38918a453d07199354f8b19af05ec6562ced5788");
-    post_data.addQueryItem("device_country", "us");
-    post_data.addQueryItem("operatorCountry", "us");
-    post_data.addQueryItem("lang", "en");
+    post_data.addQueryItem("device_country", localeCountry);
+    post_data.addQueryItem("operatorCountry", localeCountry);
+    post_data.addQueryItem("lang", localeLang);
     post_data.addQueryItem("sdk_version", "17");
     post_data.addQueryItem("Email", email);
     post_data.addQueryItem("EncryptedPasswd", masterToken);
@@ -214,7 +219,7 @@ ProxyResult *GMApi::tracks(const QString &token)
 
     QUrlQuery query;
     query.addQueryItem("dv", "0");
-    query.addQueryItem("hl", "en_US");
+    query.addQueryItem("hl", systemLocale_.name());
     query.addQueryItem("tier", "fr");
     target_url.setQuery(query);
 
@@ -270,7 +275,7 @@ ProxyResult *GMApi::devices(const QString &token)
 
     QUrlQuery query;
     query.addQueryItem("dv", "0");
-    query.addQueryItem("hl", "en_US");
+    query.addQueryItem("hl", systemLocale_.name());
     query.addQueryItem("tier", "fr");
     target_url.setQuery(query);
 
@@ -308,7 +313,7 @@ ProxyResult *GMApi::album(const QString &token, const QString &albumId)
 
     QUrlQuery query;
     query.addQueryItem("dv", "0");
-    query.addQueryItem("hl", "en_US");
+    query.addQueryItem("hl", systemLocale_.name());
     query.addQueryItem("tier", "fr");
     query.addQueryItem("alt", "json");
     query.addQueryItem("nid", albumId);
@@ -350,7 +355,7 @@ ProxyResult *GMApi::artist(const QString &token, const QString &artistId)
 
     QUrlQuery query;
     query.addQueryItem("dv", "0");
-    query.addQueryItem("hl", "en_US");
+    query.addQueryItem("hl", systemLocale_.name());
     query.addQueryItem("tier", "fr");
     query.addQueryItem("nid", artistId);
     query.addQueryItem("include-albums", "true");
@@ -385,7 +390,7 @@ ProxyResult *GMApi::artist(const QString &token, const QString &artistId)
     return proxyResult;
 }
 
-GMApi::GMApi(QObject *parent) : QObject(parent)
+GMApi::GMApi(QObject *parent) : QObject(parent), systemLocale_(QLocale::system())
 {
     qRegisterMetaType<GMTrackList>();
     qRegisterMetaType<GMDeviceList>();
