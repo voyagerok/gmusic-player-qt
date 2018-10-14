@@ -8,7 +8,7 @@ class QSplitter;
 class LibraryModel;
 class TrackListModel;
 class QToolBar;
-class QTableView;
+class LibraryTableView;
 
 namespace Ui
 {
@@ -52,7 +52,7 @@ private:
     QSplitter *mainSplitter_;
     LibraryModel *libraryModel_;
     TrackListModel *trackListModel_;
-    QTableView *trackListTableView_;
+    LibraryTableView *trackListTableView_;
 
     QString currentTrackId_;
     qint64 currentTrackPos_;

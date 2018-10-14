@@ -54,7 +54,9 @@ set(SRC
     imagestorage.cpp
     imagestorage.h
     playertoolbar.cpp
-    playertoolbar.h)
+    playertoolbar.h
+    librarytableview.cpp
+    librarytableview.h)
 
 add_executable(gmusic-player ${SRC} ${RESOURCES} ${UI})
 

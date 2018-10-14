@@ -13,6 +13,7 @@
 #include <QTreeView>
 
 #include "librarymodel.h"
+#include "librarytableview.h"
 #include "tracklistmodel.h"
 
 LibraryWidget::LibraryWidget(QWidget *parent) : QWidget(parent), ui(new Ui::LibraryWidget)
@@ -24,18 +25,25 @@ LibraryWidget::LibraryWidget(QWidget *parent) : QWidget(parent), ui(new Ui::Libr
     libraryModel_  = new LibraryModel(this);
     auto lTreeView = new QTreeView;
     lTreeView->setModel(libraryModel_);
-    connect(lTreeView, &QTreeView::doubleClicked, this, [this](const QModelIndex &index) {
+    connect(lTreeView, &QTreeView::activated, this, [this](const QModelIndex &index) {
         auto node = static_cast<LibraryModelNode *>(index.internalPointer());
         if (node->is_leaf) {
             trackListModel_->setLoaderFunc(node->tracksLoader());
+            if (trackListTableView_->model()->rowCount() > 0) {
+                trackListTableView_->setFocusPolicy(Qt::StrongFocus);
+            } else {
+                trackListTableView_->setFocusPolicy(Qt::ClickFocus);
+            }
         }
     });
+    lTreeView->setFocusPolicy(Qt::StrongFocus);
+    lTreeView->setFocus();
 
     trackListModel_      = new TrackListModel(this);
     auto sortFilterModel = new TrackListSortingModel(this);
     sortFilterModel->sort(0);
     sortFilterModel->setSourceModel(trackListModel_);
-    trackListTableView_ = new QTableView;
+    trackListTableView_ = new LibraryTableView;
     trackListTableView_->setModel(sortFilterModel);
     trackListTableView_->setSelectionBehavior(QAbstractItemView::SelectRows);
     trackListTableView_->verticalHeader()->hide();
@@ -48,17 +56,10 @@ LibraryWidget::LibraryWidget(QWidget *parent) : QWidget(parent), ui(new Ui::Libr
         QString trackId = index.data(TrackListModel::TrackId).toString();
         emit play(trackId);
     });
-
-    //    auto rightSplitter = new QSplitter;
-    //    rightSplitter->setOrientation(Qt::Vertical);
-    //    auto remotePlaylistView  = new QListView;
-    //    auto remotePodscastsView = new QListView;
-    //    rightSplitter->addWidget(remotePlaylistView);
-    //    rightSplitter->addWidget(remotePodscastsView);
+    trackListTableView_->setFocusPolicy(Qt::ClickFocus);
 
     mainSplitter_->addWidget(lTreeView);
     mainSplitter_->addWidget(trackListTableView_);
-    //    mainSplitter_->addWidget(rightSplitter);
 
     mainSplitter_->setSizes(QList<int>() << 200 << INT_MAX);
 
@@ -95,11 +96,15 @@ void LibraryWidget::playCurrent()
     }
 
     QModelIndexList indexes = trackListTableView_->selectionModel()->selectedIndexes();
+    QString trackId;
     if (!indexes.isEmpty()) {
-        QString trackId = indexes.at(0).data(TrackListModel::TrackId).toString();
-        if (trackId != currentTrackId_) {
-            emit play(trackId);
-        }
+        trackId = indexes.at(0).data(TrackListModel::TrackId).toString();
+    } else if (trackListTableView_->model()->rowCount() > 0) {
+        trackId =
+            trackListTableView_->model()->index(0, 0).data(TrackListModel::TrackId).toString();
+    }
+    if (!trackId.isEmpty() && trackId != currentTrackId_) {
+        emit play(trackId);
     }
 }
 
