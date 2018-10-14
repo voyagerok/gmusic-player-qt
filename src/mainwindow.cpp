@@ -4,6 +4,7 @@
 #include <QKeyEvent>
 #include <QLabel>
 #include <QMediaPlayer>
+#include <QShortcut>
 #include <QTimer>
 #include <QToolBar>
 
@@ -13,9 +14,16 @@
 
 #define BACKUP_INTERVAL 10 * 60 * 1000
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow), appStyle_(qApp->style())
 {
     ui->setupUi(this);
+
+    printFocusedTimer_ = new QTimer(this);
+    printFocusedTimer_->setSingleShot(false);
+    connect(printFocusedTimer_, &QTimer::timeout, this, [this] {
+        qDebug() << "focused widget name:" << focusWidget()->metaObject()->className();
+    });
 
     settingsModel_ = new SettingsModel(this);
     user_          = new User(this);
@@ -66,7 +74,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(backupTimer_, &QTimer::timeout, settingsModel_, &SettingsModel::save);
     backupTimer_->start(BACKUP_INTERVAL);
 
+    setupActions();
     setupToolbar();
+    setupShortcuts();
+    setupMenu();
 
     applyVolume(settingsModel_->volume());
     player_->setMuted(settingsModel_->muted());
@@ -91,6 +102,7 @@ void MainWindow::handleAuthorizedChanged(bool isAuthorized)
     if (isAuthorized) {
         user_->sync();
         openLibraryPage();
+        //        printFocusedTimer_->start(5 * 1000);
     }
 }
 
@@ -173,13 +185,16 @@ void MainWindow::setupToolbar()
     connect(player_, &QMediaPlayer::mutedChanged, settingsModel_, &SettingsModel::setMuted);
 
     connect(user_, &User::databasePathChanged, toolbar_, &PlayerToolbar::setDatabasePath);
-    connect(toolbar_, &PlayerToolbar::play, ui->libraryPage, &LibraryWidget::playCurrent);
-    connect(toolbar_, &PlayerToolbar::pause, player_, &QMediaPlayer::pause);
-    connect(toolbar_, &PlayerToolbar::next, ui->libraryPage, &LibraryWidget::playNext);
-    connect(toolbar_, &PlayerToolbar::prev, ui->libraryPage, &LibraryWidget::playPrev);
+
     connect(toolbar_, &PlayerToolbar::seek, player_, &QMediaPlayer::setPosition);
     connect(toolbar_, &PlayerToolbar::volumeChanged, this, &MainWindow::applyVolume);
     connect(toolbar_, &PlayerToolbar::mutedChanged, player_, &QMediaPlayer::setMuted);
+
+    QAction *firstAction = toolbar_->actions().at(0);
+    toolbar_->insertActions(firstAction, QList<QAction *>()
+                                             << playAction_ << pauseAction_ << skipBackwardAction_
+                                             << skipForwardAction_);
+
     addToolBar(Qt::ToolBarArea::TopToolBarArea, toolbar_);
 }
 
@@ -224,30 +239,6 @@ void MainWindow::handleRewindRequest()
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Left || event->key() == Qt::Key_Right) {
-        if (player_->isSeekable()) {
-            qint64 change = 0;
-            if (event->modifiers() & Qt::KeyboardModifier::ControlModifier) {
-                change = 5 * 1000;
-            } else {
-                change = 1 * 1000;
-            }
-            if (event->key() == Qt::Key_Left) {
-                change *= -1;
-            }
-            player_->setPosition(player_->position() + change);
-        } else {
-            qDebug() << __FUNCTION__ << ": player not seekable";
-        }
-    } else if (event->key() == Qt::Key_Comma) {
-        if (event->modifiers() & Qt::ShiftModifier) {
-            ui->libraryPage->playPrev();
-        }
-    } else if (event->key() == Qt::Key_Period) {
-        if (event->modifiers() & Qt::ShiftModifier) {
-            ui->libraryPage->playNext();
-        }
-    }
 }
 
 void MainWindow::handlePlayerVolumeChanged(int volume)
@@ -257,4 +248,63 @@ void MainWindow::handlePlayerVolumeChanged(int volume)
     int value    = qRound(logVol * 100);
     settingsModel_->setVolume(value);
     toolbar_->setVolume(value);
+}
+
+void MainWindow::setupShortcuts()
+{
+}
+
+void MainWindow::setupMenu()
+{
+    ui->menuPlayback->addActions(QList<QAction *>() << playAction_ << pauseAction_
+                                                    << skipBackwardAction_ << skipForwardAction_);
+    ui->menuPlayback->addSeparator();
+    ui->menuPlayback->addActions(QList<QAction *>() << seekBackward1Action_ << seekBackward5Action_
+                                                    << seekForward1Action_ << seekForward5Action_);
+}
+
+void MainWindow::setupActions()
+{
+    playAction_  = new QAction(appStyle_->standardIcon(QStyle::SP_MediaPlay), tr("Play"), this);
+    pauseAction_ = new QAction(appStyle_->standardIcon(QStyle::SP_MediaPause), tr("Pause"), this);
+    skipForwardAction_ =
+        new QAction(appStyle_->standardIcon(QStyle::SP_MediaSkipForward), tr("Skip Forward"), this);
+    skipBackwardAction_  = new QAction(appStyle_->standardIcon(QStyle::SP_MediaSkipBackward),
+                                      tr("Skip Backward"), this);
+    seekForward1Action_  = new QAction(tr("Seek Forward (1 second)"), this);
+    seekForward5Action_  = new QAction(tr("Seek Forward (5 seconds)"), this);
+    seekBackward1Action_ = new QAction(tr("Seek Backward (1 second)"), this);
+    seekBackward5Action_ = new QAction(tr("Seek Backward (5 seconds)"), this);
+
+    playAction_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
+    pauseAction_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_P));
+    skipBackwardAction_->setShortcut(QKeySequence(Qt::SHIFT + Qt::Key_Comma));
+    skipForwardAction_->setShortcut(QKeySequence(Qt::SHIFT + Qt::Key_Period));
+    seekForward1Action_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Right));
+    seekForward5Action_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Up));
+    seekBackward1Action_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Left));
+    seekBackward5Action_->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Down));
+
+    connect(playAction_, &QAction::triggered, ui->libraryPage, &LibraryWidget::playCurrent);
+    connect(pauseAction_, &QAction::triggered, player_, &QMediaPlayer::pause);
+    connect(skipForwardAction_, &QAction::triggered, ui->libraryPage, &LibraryWidget::playNext);
+    connect(skipBackwardAction_, &QAction::triggered, ui->libraryPage, &LibraryWidget::playPrev);
+    connect(seekBackward1Action_, &QAction::triggered,
+            std::bind(&MainWindow::playerSeek, this, -1));
+    connect(seekBackward5Action_, &QAction::triggered,
+            std::bind(&MainWindow::playerSeek, this, -5));
+    connect(seekForward1Action_, &QAction::triggered, std::bind(&MainWindow::playerSeek, this, 1));
+    connect(seekForward5Action_, &QAction::triggered, std::bind(&MainWindow::playerSeek, this, 5));
+
+    connect(player_, &QMediaPlayer::seekableChanged, seekBackward1Action_, &QAction::setEnabled);
+    connect(player_, &QMediaPlayer::seekableChanged, seekBackward5Action_, &QAction::setEnabled);
+    connect(player_, &QMediaPlayer::seekableChanged, seekForward1Action_, &QAction::setEnabled);
+    connect(player_, &QMediaPlayer::seekableChanged, seekForward5Action_, &QAction::setEnabled);
+}
+
+void MainWindow::playerSeek(int seconds)
+{
+    if (player_->isSeekable()) {
+        player_->setPosition(player_->position() + seconds * 1000);
+    }
 }

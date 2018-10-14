@@ -46,10 +46,6 @@ private:
     Ui::PlayerToolbar *ui;
     QStyle *appStyle_;
 
-    QAction *playAction_;
-    QAction *pauseAction_;
-    QAction *nextAction_;
-    QAction *prevAction_;
     QAction *muteAction_;
 
     QSlider *progressSlider_;

@@ -33,17 +33,6 @@ PlayerToolbar::PlayerToolbar(QWidget *parent)
 
     db_ = new Database(this);
 
-    playAction_  = addAction(appStyle_->standardIcon(QStyle::SP_MediaPlay), tr("Play"));
-    pauseAction_ = addAction(appStyle_->standardIcon(QStyle::SP_MediaPause), tr("Pause"));
-    prevAction_ =
-        addAction(appStyle_->standardIcon(QStyle::SP_MediaSkipBackward), tr("Play previous"));
-    nextAction_ = addAction(appStyle_->standardIcon(QStyle::SP_MediaSkipForward), tr("Play next"));
-
-    connect(playAction_, &QAction::triggered, this, &PlayerToolbar::play);
-    connect(pauseAction_, &QAction::triggered, this, &PlayerToolbar::pause);
-    connect(nextAction_, &QAction::triggered, this, &PlayerToolbar::next);
-    connect(prevAction_, &QAction::triggered, this, &PlayerToolbar::prev);
-
     progressSlider_ = new QSlider;
     progressSlider_->setStyle(new MyStyle(progressSlider_->style()));
     progressSlider_->setOrientation(Qt::Horizontal);

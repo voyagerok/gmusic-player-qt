@@ -17,6 +17,8 @@ namespace Ui
 class MainWindow;
 }
 
+class QShortcut;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -44,6 +46,8 @@ private slots:
     void handlePlayerStateChanged(int state);
     void handlePlayerVolumeChanged(int volume);
 
+    void playerSeek(int seconds);
+
 signals:
     void playbackStarted(const QString &trackId);
 
@@ -59,8 +63,23 @@ private:
     QString currentTrackId_;
     PlayerToolbar *toolbar_;
     Database db_;
+    QStyle *appStyle_;
 
+    QAction *playAction_;
+    QAction *pauseAction_;
+    QAction *skipForwardAction_;
+    QAction *skipBackwardAction_;
+    QAction *seekForward1Action_;
+    QAction *seekForward5Action_;
+    QAction *seekBackward1Action_;
+    QAction *seekBackward5Action_;
+
+    QTimer *printFocusedTimer_;
+
+    void setupMenu();
     void setupToolbar();
+    void setupShortcuts();
+    void setupActions();
 };
 
 #endif // MAINWINDOW_H
