@@ -44,7 +44,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(user_, &User::databasePathChanged, ui->libraryPage, &LibraryWidget::setDatabasePath);
 
     player_ = new QMediaPlayer(this);
-    applyVolume(50);
     connect(ui->libraryPage, &LibraryWidget::play, this, &MainWindow::handlePlayRequest);
     connect(ui->libraryPage, &LibraryWidget::playerRewind, this, &MainWindow::handleRewindRequest);
     connect(ui->libraryPage, &LibraryWidget::playerResume, player_, &QMediaPlayer::play);
@@ -55,6 +54,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(player_, &QMediaPlayer::durationChanged, ui->libraryPage,
             &LibraryWidget::handlePLayerDurationChanged);
     connect(player_, &QMediaPlayer::stateChanged, this, &MainWindow::handlePlayerStateChanged);
+    connect(player_, &QMediaPlayer::volumeChanged, this, &MainWindow::handlePlayerVolumeChanged);
 
     settingsModel_->load();
     user_->setAuthToken(settingsModel_->authToken());
@@ -67,6 +67,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     backupTimer_->start(BACKUP_INTERVAL);
 
     setupToolbar();
+
+    applyVolume(settingsModel_->volume());
+    player_->setMuted(settingsModel_->muted());
 
     openLoginPage();
 }
@@ -156,6 +159,8 @@ void MainWindow::setupToolbar()
 {
     toolbar_ = new PlayerToolbar;
     toolbar_->setDatabasePath(user_->databasePath());
+    toolbar_->setVolume(settingsModel_->volume());
+    toolbar_->setMuted(settingsModel_->muted());
     connect(player_, &QMediaPlayer::stateChanged, toolbar_,
             &PlayerToolbar::handlePlayerStateChanged);
     connect(player_, &QMediaPlayer::durationChanged, toolbar_,
@@ -164,12 +169,17 @@ void MainWindow::setupToolbar()
             &PlayerToolbar::handlePositionChanged);
     connect(player_, &QMediaPlayer::seekableChanged, toolbar_,
             &PlayerToolbar::handlePlayerIsSeekableChanged);
+    connect(player_, &QMediaPlayer::mutedChanged, toolbar_, &PlayerToolbar::setMuted);
+    connect(player_, &QMediaPlayer::mutedChanged, settingsModel_, &SettingsModel::setMuted);
+
     connect(user_, &User::databasePathChanged, toolbar_, &PlayerToolbar::setDatabasePath);
     connect(toolbar_, &PlayerToolbar::play, ui->libraryPage, &LibraryWidget::playCurrent);
     connect(toolbar_, &PlayerToolbar::pause, player_, &QMediaPlayer::pause);
     connect(toolbar_, &PlayerToolbar::next, ui->libraryPage, &LibraryWidget::playNext);
     connect(toolbar_, &PlayerToolbar::prev, ui->libraryPage, &LibraryWidget::playPrev);
     connect(toolbar_, &PlayerToolbar::seek, player_, &QMediaPlayer::setPosition);
+    connect(toolbar_, &PlayerToolbar::volumeChanged, this, &MainWindow::applyVolume);
+    connect(toolbar_, &PlayerToolbar::mutedChanged, player_, &QMediaPlayer::setMuted);
     addToolBar(Qt::ToolBarArea::TopToolBarArea, toolbar_);
 }
 
@@ -238,4 +248,13 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             ui->libraryPage->playNext();
         }
     }
+}
+
+void MainWindow::handlePlayerVolumeChanged(int volume)
+{
+    qreal logVol = QAudio::convertVolume(volume / qreal(100.0), QAudio::LinearVolumeScale,
+                                         QAudio::LogarithmicVolumeScale);
+    int value    = qRound(logVol * 100);
+    settingsModel_->setVolume(value);
+    toolbar_->setVolume(value);
 }

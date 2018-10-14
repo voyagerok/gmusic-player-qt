@@ -26,20 +26,19 @@ public:
 };
 
 PlayerToolbar::PlayerToolbar(QWidget *parent)
-    : QToolBar(parent), ui(new Ui::PlayerToolbar), imageStorage_(ImageStorage::instance()),
-      trackDuration_(0)
+    : QToolBar(parent), ui(new Ui::PlayerToolbar), appStyle_(qApp->style()),
+      imageStorage_(ImageStorage::instance()), trackDuration_(0)
 {
     ui->setupUi(this);
 
     db_ = new Database(this);
 
-    QStyle *appStyle = qApp->style();
-
-    playAction_  = addAction(appStyle->standardIcon(QStyle::SP_MediaPlay), tr("Play"));
-    pauseAction_ = addAction(appStyle->standardIcon(QStyle::SP_MediaPause), tr("Pause"));
+    playAction_  = addAction(appStyle_->standardIcon(QStyle::SP_MediaPlay), tr("Play"));
+    pauseAction_ = addAction(appStyle_->standardIcon(QStyle::SP_MediaPause), tr("Pause"));
     prevAction_ =
-        addAction(appStyle->standardIcon(QStyle::SP_MediaSkipBackward), tr("Play previous"));
-    nextAction_ = addAction(appStyle->standardIcon(QStyle::SP_MediaSkipForward), tr("Play next"));
+        addAction(appStyle_->standardIcon(QStyle::SP_MediaSkipBackward), tr("Play previous"));
+    nextAction_ = addAction(appStyle_->standardIcon(QStyle::SP_MediaSkipForward), tr("Play next"));
+
     connect(playAction_, &QAction::triggered, this, &PlayerToolbar::play);
     connect(pauseAction_, &QAction::triggered, this, &PlayerToolbar::pause);
     connect(nextAction_, &QAction::triggered, this, &PlayerToolbar::next);
@@ -57,11 +56,30 @@ PlayerToolbar::PlayerToolbar(QWidget *parent)
             }
         }
     });
-
     addWidget(progressSlider_);
+
     timeLabel_ = new QLabel;
+    timeLabel_->setText(QStringLiteral("00:00 / 00:00"));
     timeLabel_->setMinimumWidth(50);
     addWidget(timeLabel_);
+
+    muteAction_ = addAction(appStyle_->standardIcon(QStyle::SP_MediaVolume), tr("Mute"));
+    connect(muteAction_, &QAction::triggered, this, [this] { emit mutedChanged(!muted_); });
+
+    volumeSlider_ = new QSlider;
+    volumeSlider_->setStyle(new MyStyle(volumeSlider_->style()));
+    volumeSlider_->setOrientation(Qt::Horizontal);
+    volumeSlider_->setMinimum(0);
+    volumeSlider_->setMaximum(100);
+    volumeSlider_->setMaximumWidth(100);
+    connect(volumeSlider_, &QSlider::actionTriggered, this, [this](int action) {
+        if (action == QAbstractSlider::SliderMove ||
+            action == QAbstractSlider::SliderSingleStepAdd ||
+            action == QAbstractSlider::SliderSingleStepSub) {
+            emit volumeChanged(volumeSlider_->sliderPosition());
+        }
+    });
+    addWidget(volumeSlider_);
 }
 
 PlayerToolbar::~PlayerToolbar()
@@ -123,4 +141,20 @@ void PlayerToolbar::handlePositionChanged(qint64 pos)
 void PlayerToolbar::handlePlayerIsSeekableChanged(bool seekable)
 {
     playerIsSeekable_ = seekable;
+}
+
+void PlayerToolbar::setVolume(int volume)
+{
+    if (volumeSlider_->value() != volume) {
+        volumeSlider_->setValue(volume);
+    }
+}
+
+void PlayerToolbar::setMuted(bool muted)
+{
+    if (muted_ != muted) {
+        muted_ = muted;
+        muteAction_->setIcon(
+            appStyle_->standardIcon(muted_ ? QStyle::SP_MediaVolumeMuted : QStyle::SP_MediaVolume));
+    }
 }

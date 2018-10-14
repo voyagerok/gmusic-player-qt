@@ -5,6 +5,8 @@
 
 #include "settingsstore.h"
 
+QVariantMap SettingsModel::defaultValues_ = {{"autoLogin", true}, {"volume", 50}, {"muted", false}};
+
 SettingsModel::SettingsModel(QObject *parent) : QObject(parent), autoLogin_(true)
 {
     settings_ = new QSettings(this);
@@ -18,7 +20,8 @@ void SettingsModel::load()
     for (int i = offset; i < count; ++i) {
         QMetaProperty property = metaobject->property(i);
         const char *name       = property.name();
-        this->setProperty(name, settings_->value(QString::fromLatin1(name)));
+        QString key            = QString::fromLatin1(name);
+        this->setProperty(name, settings_->value(key, defaultValues_.value(key)));
     }
 }
 
@@ -75,6 +78,22 @@ void SettingsModel::setAutoLogin(bool autologin)
     }
 }
 
+void SettingsModel::setVolume(int volume)
+{
+    if (volume_ != volume) {
+        volume_ = volume;
+        emit volumeChanged(volume);
+    }
+}
+
+void SettingsModel::setMuted(bool muted)
+{
+    if (muted_ != muted) {
+        muted_ = muted;
+        emit mutedChanged(muted);
+    }
+}
+
 QString SettingsModel::authToken() const
 {
     return authToken_;
@@ -98,4 +117,14 @@ QString SettingsModel::deviceId() const
 bool SettingsModel::autoLogin() const
 {
     return autoLogin_;
+}
+
+int SettingsModel::volume() const
+{
+    return volume_;
+}
+
+bool SettingsModel::muted() const
+{
+    return muted_;
 }

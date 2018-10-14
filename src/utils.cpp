@@ -153,7 +153,9 @@ QString TimeFormat(int64_t secs)
     int64_t minutes     = secs / 60;
     int64_t leftSeconds = secs % 60;
 
-    return QString("%1:%2").arg(minutes, 2).arg(leftSeconds, 2, 10, QLatin1Char('0'));
+    return QString("%1:%2")
+        .arg(minutes, 2, 10, QLatin1Char('0'))
+        .arg(leftSeconds, 2, 10, QLatin1Char('0'));
 }
 
 QString MacAddress()

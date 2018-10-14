@@ -42,6 +42,7 @@ private slots:
     void setCurrentTrack(const QString &id);
 
     void handlePlayerStateChanged(int state);
+    void handlePlayerVolumeChanged(int volume);
 
 signals:
     void playbackStarted(const QString &trackId);

@@ -7,6 +7,7 @@ class QLabel;
 class QSlider;
 class Database;
 class ImageStorage;
+class SettingsModel;
 
 namespace Ui
 {
@@ -29,8 +30,13 @@ public slots:
     void handlePositionChanged(qint64 position);
     void handlePlayerIsSeekableChanged(bool seekable);
 
+    void setVolume(int volume);
+    void setMuted(bool muted);
+
 signals:
     void seek(qint64 msec);
+    void volumeChanged(int volume);
+    void mutedChanged(bool muted);
     void play();
     void pause();
     void next();
@@ -38,15 +44,17 @@ signals:
 
 private:
     Ui::PlayerToolbar *ui;
+    QStyle *appStyle_;
 
     QAction *playAction_;
     QAction *pauseAction_;
     QAction *nextAction_;
     QAction *prevAction_;
+    QAction *muteAction_;
 
-    //    QLabel *imgLabel_;
     QSlider *progressSlider_;
     QLabel *timeLabel_;
+    QSlider *volumeSlider_;
 
     bool playerIsSeekable_;
 
@@ -54,6 +62,8 @@ private:
     QString currentTrackId_;
     ImageStorage &imageStorage_;
     int trackDuration_;
+
+    bool muted_;
 
     void handlePlaybackStarted();
     void handlePlaybackStopped();

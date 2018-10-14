@@ -15,6 +15,8 @@ class SettingsModel : public QObject
     Q_PROPERTY(QString email READ email WRITE setEmail NOTIFY emailChanged)
     Q_PROPERTY(QString deviceId READ deviceId WRITE setDeviceId NOTIFY deviceIdChanged)
     Q_PROPERTY(bool autoLogin READ autoLogin WRITE setAutoLogin NOTIFY autoLoginChanged)
+    Q_PROPERTY(int volume READ volume WRITE setVolume NOTIFY volumeChanged)
+    Q_PROPERTY(bool muted READ muted WRITE setMuted NOTIFY mutedChanged)
 public:
     using SettingsValue = std::pair<QString, QVariant>;
 
@@ -25,6 +27,8 @@ public:
     QString email() const;
     QString deviceId() const;
     bool autoLogin() const;
+    int volume() const;
+    bool muted() const;
 
 public slots:
     void setAuthToken(const QString &authToken);
@@ -32,6 +36,9 @@ public slots:
     void setEmail(const QString &email);
     void setDeviceId(const QString &deviceId);
     void setAutoLogin(bool);
+    void setVolume(int volume);
+    void setMuted(bool muted);
+
     void load();
     void save();
 
@@ -41,6 +48,8 @@ signals:
     void emailChanged(QString);
     void deviceIdChanged(QString);
     void autoLoginChanged(bool);
+    void volumeChanged(int volume);
+    void mutedChanged(bool muted);
 
 private:
     QSettings *settings_;
@@ -50,6 +59,10 @@ private:
     QString email_;
     QString deviceId_;
     bool autoLogin_;
+    int volume_;
+    bool muted_;
+
+    static QVariantMap defaultValues_;
 };
 
 #endif // SETTINGSMODEL_H
