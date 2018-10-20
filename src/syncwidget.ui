@@ -6,43 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>509</width>
-    <height>178</height>
+    <width>328</width>
+    <height>75</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Synchronization with remote server</string>
+   <string/>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
     <number>15</number>
    </property>
-   <property name="leftMargin">
-    <number>40</number>
-   </property>
-   <property name="rightMargin">
-    <number>40</number>
-   </property>
-   <item>
-    <spacer name="verticalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
    <item>
     <widget class="QLabel" name="label">
      <property name="text">
-      <string>Synchronizing with remote server...</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
+      <string>Synchrnizing with remote server... Please wait</string>
      </property>
     </widget>
    </item>
@@ -51,33 +29,7 @@
      <property name="value">
       <number>24</number>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
     </widget>
-   </item>
-   <item>
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Please wait</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>40</height>
-      </size>
-     </property>
-    </spacer>
    </item>
   </layout>
  </widget>
