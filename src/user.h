@@ -91,9 +91,11 @@ public:
 
     Q_INVOKABLE void login(const QString &passwd);
     Q_INVOKABLE void sync();
-    Q_INVOKABLE void restore();
+    Q_INVOKABLE void refresh();
 
-    bool canRestore() const;
+    Q_INVOKABLE void logout();
+
+    bool canRefresh() const;
 
     ProxyResult *getStreamUrl(const QString &trackId)
     {

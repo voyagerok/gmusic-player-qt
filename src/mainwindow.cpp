@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QMediaPlayer>
 #include <QShortcut>
+#include <QStyle>
 #include <QTimer>
 #include <QToolBar>
 
@@ -41,6 +42,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(user_, &User::authorizedChanged, ui->actionSynchronize, &QAction::setEnabled);
     connect(ui->actionSynchronize, &QAction::triggered, user_, &User::sync);
+    connect(ui->actionLogout, &QAction::triggered, user_, &User::logout);
+    connect(ui->actionRefresh_auth, &QAction::triggered, user_, &User::refresh);
 
     connect(ui->loginPage, &LoginWidget::emailChanged, user_, &User::setEmail);
     connect(ui->loginPage, &LoginWidget::statusChanged, this, &MainWindow::handleStatusChanged);
@@ -64,6 +67,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(player_, &QMediaPlayer::stateChanged, this, &MainWindow::handlePlayerStateChanged);
     connect(player_, &QMediaPlayer::volumeChanged, this, &MainWindow::handlePlayerVolumeChanged);
 
+    connect(ui->refreshPage, &RefreshAuthWidget::forget, user_, &User::logout);
+    connect(ui->refreshPage, &RefreshAuthWidget::refresh, user_, &User::refresh);
+
     settingsModel_->load();
     user_->setAuthToken(settingsModel_->authToken());
     user_->setDeviceId(settingsModel_->deviceId());
@@ -82,7 +88,16 @@ MainWindow::MainWindow(QWidget *parent)
     applyVolume(settingsModel_->volume());
     player_->setMuted(settingsModel_->muted());
 
-    openLoginPage();
+    connect(ui->stackedWidget, &QStackedWidget::currentChanged, this,
+            &MainWindow::handleCurrentWidgetChanged);
+
+    if (user_->authorized()) {
+        user_->refresh();
+    } else if (user_->canRefresh()) {
+        openRefreshPage();
+    } else {
+        openLoginPage();
+    }
 }
 
 MainWindow::~MainWindow()
@@ -98,27 +113,32 @@ void MainWindow::handleStatusChanged(const QString &status)
 
 void MainWindow::handleAuthorizedChanged(bool isAuthorized)
 {
-    ui->statusbar->showMessage(isAuthorized ? "Success" : "Failure", 5 * 1000);
     if (isAuthorized) {
         user_->sync();
         openLibraryPage();
-        //        printFocusedTimer_->start(5 * 1000);
+    } else if (user_->canRefresh()) {
+        openRefreshPage();
+    } else {
+        openLoginPage();
     }
 }
 
 void MainWindow::handleErrorOccured(const QString &error)
 {
-    ui->statusbar->showMessage(error, 5 * 1000);
+    ui->statusbar->showMessage(tr("Error: %1").arg(error), 25 * 1000);
 }
 
 void MainWindow::openLoginPage()
 {
-    if (user_->canRestore() && settingsModel_->autoLogin()) {
-        user_->restore();
-    } else {
-        ui->loginPage->setEmail(user_->email());
-        ui->stackedWidget->setCurrentWidget(ui->loginPage);
-    }
+    ui->loginPage->setEmail(user_->email());
+    ui->loginPage->setAutoLogin(settingsModel_->autoLogin());
+    ui->stackedWidget->setCurrentWidget(ui->loginPage);
+}
+
+void MainWindow::openRefreshPage()
+{
+    ui->refreshPage->setEmail(user_->email());
+    ui->stackedWidget->setCurrentWidget(ui->refreshPage);
 }
 
 void MainWindow::openSyncPage()
@@ -307,4 +327,19 @@ void MainWindow::playerSeek(int seconds)
     if (player_->isSeekable()) {
         player_->setPosition(player_->position() + seconds * 1000);
     }
+}
+
+void MainWindow::handleCurrentWidgetChanged(int index)
+{
+    auto stackedWidget       = static_cast<QStackedWidget *>(sender());
+    bool enablePlayerActions = stackedWidget->widget(index) == ui->libraryPage;
+
+    playAction_->setEnabled(enablePlayerActions);
+    pauseAction_->setEnabled(enablePlayerActions);
+    skipBackwardAction_->setEnabled(enablePlayerActions);
+    skipForwardAction_->setEnabled(enablePlayerActions);
+    seekBackward1Action_->setEnabled(enablePlayerActions);
+    seekBackward5Action_->setEnabled(enablePlayerActions);
+    seekForward1Action_->setEnabled(enablePlayerActions);
+    seekForward5Action_->setEnabled(enablePlayerActions);
 }

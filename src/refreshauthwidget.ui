@@ -1,30 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>LoginWidget</class>
- <widget class="QWidget" name="LoginWidget">
+ <class>RefreshAuthWidget</class>
+ <widget class="QWidget" name="RefreshAuthWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>672</width>
-    <height>438</height>
+    <width>768</width>
+    <height>437</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>11</pointsize>
+   </font>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
-    <number>15</number>
+    <number>25</number>
    </property>
    <property name="leftMargin">
-    <number>50</number>
+    <number>25</number>
    </property>
    <property name="rightMargin">
-    <number>50</number>
+    <number>25</number>
    </property>
    <item>
-    <spacer name="verticalSpacer">
+    <spacer name="verticalSpacer_2">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
@@ -37,15 +42,29 @@
     </spacer>
    </item>
    <item>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="label_3">
      <property name="font">
       <font>
-       <family>Ubuntu</family>
        <pointsize>15</pointsize>
       </font>
      </property>
      <property name="text">
       <string>Welcome to Gmusic Player</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="font">
+      <font>
+       <pointsize>15</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Authorization data is incomplete for specified account.</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -60,7 +79,7 @@
       </font>
      </property>
      <property name="text">
-      <string>Please log in to your Google account</string>
+      <string>You can restore it or login into another account</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -68,7 +87,7 @@
     </widget>
    </item>
    <item>
-    <spacer name="verticalSpacer_3">
+    <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>
@@ -81,44 +100,47 @@
     </spacer>
    </item>
    <item>
-    <widget class="QLineEdit" name="txtEmail">
-     <property name="placeholderText">
-      <string>Email</string>
+    <widget class="QLineEdit" name="accountLineEdit">
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
      </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QLineEdit" name="txtPasswd">
-     <property name="echoMode">
-      <enum>QLineEdit::Password</enum>
-     </property>
-     <property name="placeholderText">
-      <string>Password</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <widget class="QPushButton" name="btnLogin">
-     <property name="text">
-      <string>Login</string>
-     </property>
-     <property name="autoDefault">
+     <property name="readOnly">
       <bool>true</bool>
      </property>
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout"/>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="btnRefresh">
+       <property name="font">
+        <font>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Retore</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnForget">
+       <property name="font">
+        <font>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>Forget</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
-    <widget class="QCheckBox" name="btnAutoLogin">
-     <property name="text">
-      <string>Login automatically</string>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <spacer name="verticalSpacer_2">
+    <spacer name="verticalSpacer_3">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
      </property>

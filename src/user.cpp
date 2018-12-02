@@ -150,22 +150,14 @@ void User::login(const QString &passwd)
     login_(deviceId, passwd);
 }
 
-bool User::canRestore() const
+bool User::canRefresh() const
 {
-    return !authToken_.isEmpty() || !masterToken_.isEmpty();
+    return !masterToken_.isEmpty();
 }
 
-void User::restore()
+void User::refresh()
 {
-    if (!authToken_.isEmpty()) {
-        qDebug() << __FUNCTION__ << ": found auth token - nothing to do";
-        createUserData();
-        emit authorizedChanged(true);
-    } else if (!masterToken_.isEmpty()) {
-        qDebug() << __FUNCTION__ << ": "
-                 << "Found master token: using it instead of password";
-        getAuthToken();
-    }
+    getAuthToken();
 }
 
 void User::login_(const QString &deviceId, const QString &passwd)
@@ -198,7 +190,6 @@ void User::getAuthToken()
                 this->extractDeviceId();
             }
         } else {
-            qDebug() << result.toString();
             this->setMasterToken(QString());
             emit this->errorOccured(tr("Could not login: %1").arg(result.toString()));
         }
@@ -278,4 +269,11 @@ bool User::createUserData()
 void User::requestSyncInterruption()
 {
     syncThread_->requestInterruption();
+}
+
+void User::logout()
+{
+    setMasterToken("");
+    setAuthToken("");
+    emit authorizedChanged(this->authorized());
 }

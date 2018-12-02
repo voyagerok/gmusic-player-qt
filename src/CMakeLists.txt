@@ -21,7 +21,8 @@ set(UI
     loginwidget.ui
     syncwidget.ui
     librarywidget.ui
-    playertoolbar.ui)
+    playertoolbar.ui
+    refreshauthwidget.ui)
 
 set(SRC
     main.cpp
@@ -56,7 +57,9 @@ set(SRC
     playertoolbar.cpp
     playertoolbar.h
     librarytableview.cpp
-    librarytableview.h)
+    librarytableview.h
+    refreshauthwidget.cpp
+    refreshauthwidget.h)
 
 add_executable(gmusic-player ${SRC} ${RESOURCES} ${UI})
 

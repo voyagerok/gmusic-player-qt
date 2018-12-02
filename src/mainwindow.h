@@ -37,6 +37,7 @@ private slots:
     void openLoginPage();
     void openSyncPage();
     void openLibraryPage();
+    void openRefreshPage();
 
     void handlePlayRequest(const QString &trackId);
     void handleRewindRequest();
@@ -47,6 +48,8 @@ private slots:
     void handlePlayerVolumeChanged(int volume);
 
     void playerSeek(int seconds);
+
+    void handleCurrentWidgetChanged(int index);
 
 signals:
     void playbackStarted(const QString &trackId);

@@ -32,6 +32,7 @@
       <widget class="LoginWidget" name="loginPage"/>
       <widget class="LibraryWidget" name="libraryPage"/>
       <widget class="SyncWidget" name="syncPage"/>
+      <widget class="RefreshAuthWidget" name="refreshPage"/>
      </widget>
     </item>
    </layout>
@@ -60,6 +61,8 @@
      <string>&amp;Remote</string>
     </property>
     <addaction name="actionSynchronize"/>
+    <addaction name="actionLogout"/>
+    <addaction name="actionRefresh_auth"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
@@ -86,6 +89,16 @@
     <string>Ctrl+R</string>
    </property>
   </action>
+  <action name="actionLogout">
+   <property name="text">
+    <string>Logout</string>
+   </property>
+  </action>
+  <action name="actionRefresh_auth">
+   <property name="text">
+    <string>Refresh auth</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -104,6 +117,12 @@
    <class>SyncWidget</class>
    <extends>QWidget</extends>
    <header>syncwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>RefreshAuthWidget</class>
+   <extends>QWidget</extends>
+   <header>refreshauthwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
