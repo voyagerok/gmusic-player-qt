@@ -14,6 +14,7 @@
 #include <memory>
 
 #include "proxyresult.h"
+#include "utils.h"
 
 #define MS_THRESHOLD 24 * 3600 * 1000
 #define TIMER_POOL_SIZE 20
@@ -29,30 +30,13 @@ ImageStorage::ImageStorage(QObject *parent)
 {
     manager_ = new QNetworkAccessManager(this);
 
-    QDir dataDir;
-    QString dataPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).at(0);
-    if (!dataDir.exists(dataPath) && !dataDir.mkdir(dataPath)) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not create data dir";
-        return;
-    }
-    dataDir.cd(dataPath);
-
-    QDir cacheDir;
-    QString cachePath = QStandardPaths::standardLocations(QStandardPaths::CacheLocation).at(0);
-    if (!cacheDir.exists(cachePath) && !cacheDir.mkdir(cachePath)) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not create cache dir";
-        return;
-    }
-    cacheDir.cd(cachePath);
-    if (!cacheDir.exists("images") && !cacheDir.mkdir("images")) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not create image cache dir";
-        return;
-    }
+    QDir cacheDir(Utils::cachePath());
+    cacheDir.mkdir("images");
     cacheDir.cd("images");
     imageCacheDirPath_ = cacheDir.absolutePath();
 
     db_ = QSqlDatabase::addDatabase("QSQLITE", "IMAGE_STORAGE");
-    db_.setDatabaseName(dataDir.filePath("image_storage.sqlite"));
+    db_.setDatabaseName(QDir(Utils::dataPath()).absoluteFilePath("image_storage.sqlite"));
     if (!db_.open()) {
         qDebug() << __PRETTY_FUNCTION__ << ": could not open database:" << db_.lastError();
         return;

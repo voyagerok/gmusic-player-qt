@@ -3,7 +3,9 @@
 
 #include <QCryptographicHash>
 #include <QDateTime>
+#include <QDir>
 #include <QNetworkInterface>
+#include <QStandardPaths>
 #include <chrono>
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
@@ -161,8 +163,10 @@ QString TimeFormat(int64_t secs)
 QString MacAddress()
 {
     QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
-    if (!interfaces.empty()) {
-        return interfaces.at(0).hardwareAddress();
+    foreach (const QNetworkInterface &iface, interfaces) {
+        if (!iface.flags().testFlag(QNetworkInterface::IsLoopBack)) {
+            return iface.hardwareAddress();
+        }
     }
 
     return QString();
@@ -173,6 +177,26 @@ QString ThreadId()
     std::stringstream ss;
     ss << std::this_thread::get_id();
     return QString::fromStdString(ss.str());
+}
+
+QString dataPath()
+{
+    QDir dir;
+    QString dataPath = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation).at(0);
+    if (!dir.exists(dataPath) || !dir.mkpath(dataPath)) {
+        return QString();
+    }
+    return dataPath;
+}
+
+QString cachePath()
+{
+    QDir cacheDir;
+    QString cachePath = QStandardPaths::standardLocations(QStandardPaths::CacheLocation).at(0);
+    if (!cacheDir.exists(cachePath) && !cacheDir.mkpath(cachePath)) {
+        return QString();
+    }
+    return cachePath;
 }
 
 } // namespace Utils

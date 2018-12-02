@@ -16,6 +16,9 @@ QString TimeFormat(int64_t seconds);
 QString MacAddress();
 QString ThreadId();
 
+QString dataPath();
+QString cachePath();
+
 template <class T, class U, class F> std::optional<U> map_opt(const std::optional<T> &input, F &&f)
 {
     if (!input) {
