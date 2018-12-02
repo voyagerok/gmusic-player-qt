@@ -8,6 +8,7 @@ class QSlider;
 class Database;
 class ImageStorage;
 class SettingsModel;
+class QLineEdit;
 
 namespace Ui
 {
@@ -51,6 +52,7 @@ private:
     QSlider *progressSlider_;
     QLabel *timeLabel_;
     QSlider *volumeSlider_;
+    QLineEdit *searchLineEdit_;
 
     bool playerIsSeekable_;
 

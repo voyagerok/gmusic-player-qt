@@ -3,9 +3,11 @@
 
 #include <QLabel>
 #include <QLayout>
+#include <QLineEdit>
 #include <QMediaPlayer>
 #include <QProxyStyle>
 #include <QSlider>
+#include <QSpacerItem>
 
 #include "database.h"
 #include "imagestorage.h"
@@ -36,6 +38,7 @@ PlayerToolbar::PlayerToolbar(QWidget *parent)
     progressSlider_ = new QSlider;
     progressSlider_->setStyle(new MyStyle(progressSlider_->style()));
     progressSlider_->setOrientation(Qt::Horizontal);
+    progressSlider_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     connect(progressSlider_, &QSlider::actionTriggered, this, [this](int action) {
         if (playerIsSeekable_) {
             if (action == QAbstractSlider::SliderMove ||
@@ -46,6 +49,11 @@ PlayerToolbar::PlayerToolbar(QWidget *parent)
         }
     });
     addWidget(progressSlider_);
+
+    auto spacer = new QWidget;
+    spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    spacer->setMaximumWidth(10);
+    addWidget(spacer);
 
     timeLabel_ = new QLabel;
     timeLabel_->setText(QStringLiteral("00:00 / 00:00"));
@@ -69,6 +77,19 @@ PlayerToolbar::PlayerToolbar(QWidget *parent)
         }
     });
     addWidget(volumeSlider_);
+
+    addSeparator();
+
+    searchLineEdit_ = new QLineEdit;
+    searchLineEdit_->setMinimumWidth(50);
+    searchLineEdit_->setMaximumWidth(450);
+    searchLineEdit_->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
+    searchLineEdit_->setPlaceholderText(tr("Search"));
+    searchLineEdit_->addAction(appStyle_->standardIcon(QStyle::SP_ComputerIcon),
+                               QLineEdit::ActionPosition::LeadingPosition);
+    searchLineEdit_->setFocusPolicy(Qt::StrongFocus);
+    searchLineEdit_->setFocus();
+    addWidget(searchLineEdit_);
 }
 
 PlayerToolbar::~PlayerToolbar()

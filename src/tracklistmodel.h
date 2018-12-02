@@ -15,8 +15,6 @@ class TrackListModel : public QAbstractTableModel
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString databasePath WRITE setDatabasePath)
-
 public:
     using Loader = std::function<Opt<GMTrackList>(Database &)>;
 
