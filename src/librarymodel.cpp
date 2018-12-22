@@ -118,14 +118,21 @@ void LibraryModel::build_tree(LibraryModelNode *root, Database *db)
 
 QModelIndex LibraryModel::index(int row, int column, const QModelIndex &parent) const
 {
+    if (!hasIndex(row, column, parent)) {
+        return QModelIndex();
+    }
+
     LibraryModelNode *node;
     if (parent.isValid()) {
         node = static_cast<LibraryModelNode *>(parent.internalPointer());
     } else {
         node = _root;
     }
-    QModelIndex index = createIndex(row, column, node->children[row]);
-    return index;
+    LibraryModelNode *child = node->childAt(row);
+    if (child) {
+        return createIndex(row, column, child);
+    }
+    return QModelIndex();
 }
 
 QModelIndex LibraryModel::parent(const QModelIndex &index) const

@@ -37,6 +37,11 @@ struct LibraryModelNode {
         return QString();
     }
 
+    LibraryModelNode *childAt(int index)
+    {
+        return children.value(index, nullptr);
+    }
+
     int level;
     int index;
     QVariant data;
