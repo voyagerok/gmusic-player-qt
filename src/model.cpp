@@ -14,7 +14,7 @@ std::optional<GMTrack> GMTrack::fromJson(const QJsonObject &json)
     GMTrack track;
 
     if (!json.contains(QStringLiteral("id"))) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not find track id";
+        qWarning() << "could not find track id";
         return std::nullopt;
     }
 
@@ -41,7 +41,7 @@ std::optional<GMAlbum> GMAlbum::fromJson(const QJsonObject &json)
     GMAlbum album;
 
     if (!json.contains(QStringLiteral("albumId"))) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not find album id";
+        qWarning() << "could not find album id";
         return std::nullopt;
     }
 
@@ -64,7 +64,7 @@ std::optional<GMArtist> GMArtist::fromJson(const QJsonObject &json)
     GMArtist artist;
 
     if (!json.contains(QStringLiteral("artistId"))) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not find artist id";
+        qWarning() << "could not find artist id";
         return std::nullopt;
     }
 
@@ -94,7 +94,7 @@ std::optional<GMDevice> GMDevice::fromJson(const QJsonObject &json)
     GMDevice device;
 
     if (!json.contains(QStringLiteral("id"))) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not find device id";
+        qWarning() << "could not find device id";
         return std::nullopt;
     }
 

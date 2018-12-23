@@ -15,7 +15,7 @@ SyncWorker::SyncWorker(const QString &token, QObject *parent) : QObject(parent),
 void SyncWorker::run(QString dbPath)
 {
     if (!db_.openConnection(dbPath, Utils::ThreadId())) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not open database connection";
+        qWarning() << "could not open database connection";
         return;
     }
     emit started();
@@ -24,26 +24,23 @@ void SyncWorker::run(QString dbPath)
         do {
             allTracks.append(wait_result<GMTrackList>(api_->tracks(token_)));
             if (thread()->isInterruptionRequested()) {
-                qDebug() << "SyncThread: interruption requested";
                 emit finished();
                 return;
             }
         } while (api_->hasMoreTracks());
         auto localtracks = db_.tracks();
         if (!localtracks) {
-            qDebug() << __PRETTY_FUNCTION__ << ": could not extract tracks";
+            qWarning() << ": could not extract tracks";
             emit errorOccured(tr("Could not load tracks from database"));
             return;
         }
         removeDeletedTracks(allTracks, *localtracks);
         if (thread()->isInterruptionRequested()) {
-            qDebug() << "SyncThread: interruption requested";
             emit finished();
             return;
         }
         mergeRemoteTracks(allTracks, *localtracks);
         if (thread()->isInterruptionRequested()) {
-            qDebug() << "SyncThread: interruption requested";
             emit finished();
             return;
         }
@@ -119,7 +116,7 @@ void SyncWorker::mergeRemoteTracks(const GMTrackList &remoteTrackList,
         try {
             processTrack(remoteTrackList[i]);
         } catch (const GMApi::Error &e) {
-            qDebug() << __FUNCTION__ << ": failed to prcoess track: " << e.what();
+            qWarning() << "failed to prcoess track: " << e.what();
         }
         if (i % 50 == 0) {
             emit progressChanged((double)i / remoteTrackList.size());
@@ -168,7 +165,6 @@ void User::login_(const QString &deviceId, const QString &passwd)
             this->setMasterToken(result.toString());
             this->getAuthToken();
         } else {
-            qDebug() << result.toString();
             emit this->errorOccured(tr("Could not login: %1").arg(result.toString()));
         }
     });
@@ -210,7 +206,7 @@ void User::extractDeviceId()
                 emit this->errorOccured(tr("Could not create directory for user data"));
             }
         } else {
-            qDebug() << "Could not extract device id: " << result.toString();
+            qWarning() << "Could not extract device id: " << result.toString();
             emit this->errorOccured(tr("Could not extract registered devices"));
         }
     });
@@ -234,8 +230,7 @@ bool User::createUserData()
     QDir dataDir;
     QString appDataLocation = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     if (!dataDir.exists(appDataLocation) && !dataDir.mkpath(appDataLocation)) {
-        qDebug() << __FUNCTION__ << ": "
-                 << "could not create app data directory";
+        qWarning() << "could not create app data directory";
         return false;
     }
     dataDir.cd(appDataLocation);
@@ -247,19 +242,18 @@ bool User::createUserData()
     QString userDir   = QString::fromLatin1(result.toHex());
 
     if (!dataDir.exists(userDir) && !dataDir.mkdir(userDir)) {
-        qDebug() << __FUNCTION__ << ": "
-                 << "could not create user data directory";
+        qWarning() << "could not create user data directory";
         return false;
     }
     dataDir.cd(userDir);
 
     QString dbPath = dataDir.filePath(QStringLiteral("storage.sqlite"));
     if (!db_.openConnection(dbPath, Utils::ThreadId())) {
-        qDebug() << __FUNCTION__ << ": could not open database connection";
+        qWarning() << "could not open database connection";
         return false;
     }
     if (!db_.createTables()) {
-        qDebug() << __FUNCTION__ << ": could not create tables";
+        qWarning() << "could not create tables";
         return false;
     }
     setDatabasePath(dbPath);

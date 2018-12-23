@@ -22,9 +22,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     printFocusedTimer_ = new QTimer(this);
     printFocusedTimer_->setSingleShot(false);
-    connect(printFocusedTimer_, &QTimer::timeout, this, [this] {
-        qDebug() << "focused widget name:" << focusWidget()->metaObject()->className();
-    });
 
     settingsModel_ = new SettingsModel(this);
     user_          = new User(this);
@@ -156,7 +153,7 @@ void MainWindow::handlePlayRequest(const QString &trackId)
     ProxyResult *result = user_->getStreamUrl(trackId);
     connect(result, &ProxyResult::ready, this, [this, trackId](int status, QVariant result) {
         if (status == ProxyResult::Error) {
-            qDebug() << "Failed to get stream url: " << result.toString();
+            qWarning() << "Failed to get stream url: " << result.toString();
             return;
         }
         if (player_->state() == QMediaPlayer::State::PlayingState) {
@@ -253,7 +250,7 @@ void MainWindow::handleRewindRequest()
         player_->setPosition(0);
         player_->play();
     } else {
-        qDebug() << __FUNCTION__ << ": player not seekable";
+        qDebug() << "player not seekable";
     }
 }
 

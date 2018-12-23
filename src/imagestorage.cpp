@@ -38,11 +38,11 @@ ImageStorage::ImageStorage(QObject *parent)
     db_ = QSqlDatabase::addDatabase("QSQLITE", "IMAGE_STORAGE");
     db_.setDatabaseName(QDir(Utils::dataPath()).absoluteFilePath("image_storage.sqlite"));
     if (!db_.open()) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not open database:" << db_.lastError();
+        qWarning() << "could not open database" << db_.lastError();
         return;
     }
     if (!createDatabaseSchema()) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not create database schema";
+        qWarning() << "could not create database schema";
         return;
     }
     initialized_ = true;
@@ -111,7 +111,7 @@ void ImageStorage::downloadImage(const QString &url)
     QString filepath = QDir(imageCacheDirPath_).filePath(filename);
     auto imageFile   = std::make_shared<QFile>(filepath);
     if (!imageFile->open(QFile::WriteOnly | QFile::Unbuffered)) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not open image file";
+        qWarning() << "could not open image file";
         return;
     }
     QNetworkReply *reply = manager_->get(QNetworkRequest(QUrl{url}));
@@ -124,7 +124,7 @@ void ImageStorage::downloadImage(const QString &url)
         activeDownloads_.remove(url);
         auto reply = qobject_cast<QNetworkReply *>(sender());
         if (reply->error() != QNetworkReply::NoError) {
-            qDebug() << "downloadImage error:" << reply->errorString();
+            qWarning() << reply->errorString();
             QFile::remove(filepath);
             ++failureCounter_;
             return;
@@ -145,7 +145,7 @@ void ImageStorage::insertCacheEntry(const QString &url, const QString &filepath)
     query.bindValue(":localPath", filepath);
     query.bindValue(":timestamp", QDateTime::currentMSecsSinceEpoch());
     if (!query.exec()) {
-        qDebug() << __PRETTY_FUNCTION__ << ": error:" << query.lastError();
+        qWarning() << query.lastError();
     }
 }
 
@@ -158,6 +158,6 @@ void ImageStorage::removeCacheEntry(const QString &path, const QString &url)
     query.prepare(QStringLiteral("DELETE FROM ImageCacheMetadata WHERE url = :url"));
     query.bindValue(":url", url);
     if (!query.exec()) {
-        qDebug() << __PRETTY_FUNCTION__ << ":" << query.lastError();
+        qWarning() << query.lastError();
     }
 }

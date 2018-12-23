@@ -26,7 +26,7 @@ void RootLibraryNode::load_children(Database *db)
                 new ArtistLibraryNode(0, i, QVariant::fromValue(artists->at(i)), this));
         }
     } else {
-        qDebug() << "RootLibraryNode: failed to read artists from database";
+        qWarning() << "RootLibraryNode: failed to read artists from database";
     }
 }
 
@@ -44,8 +44,8 @@ void ArtistLibraryNode::load_children(Database *db)
                 new AlbumLibraryNode(1, i, QVariant::fromValue(albums->at(i)), this));
         }
     } else {
-        qDebug() << "ArtistLibraryNode: failed to load albums for artist with id: "
-                 << artist.artistId << ", name: " << artist.name;
+        qWarning() << "ArtistLibraryNode: failed to load albums for artist with id: "
+                   << artist.artistId << ", name: " << artist.name;
     }
 }
 
@@ -215,7 +215,7 @@ QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int 
 void LibraryModel::setDatabasePath(const QString &dbPath)
 {
     if (!db_.openConnection(dbPath)) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not open database at " << dbPath;
+        qWarning() << "could not open database at" << dbPath;
         return;
     }
 }

@@ -113,7 +113,7 @@ void TrackListModel::reloadTracks()
 void TrackListModel::setDatabasePath(const QString &dbPath)
 {
     if (!db_.openConnection(dbPath, Utils::ThreadId())) {
-        qDebug() << __PRETTY_FUNCTION__ << ": could not open database connection";
+        qWarning() << "could not open database connection";
     }
 }
 

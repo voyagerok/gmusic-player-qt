@@ -130,7 +130,7 @@ static std::optional<GMTrackList> parse_tracks(const QByteArray &rawData, QStrin
     QJsonParseError error;
     auto doc = QJsonDocument::fromJson(rawData, &error);
     if (!doc.isObject()) {
-        qDebug() << __FUNCTION__ << ": " << error.errorString();
+        qWarning() << error.errorString();
         return std::nullopt;
     }
 
@@ -155,7 +155,7 @@ static std::optional<GMTrackList> parse_tracks(const QByteArray &rawData, QStrin
             tracks.append(*track);
         }
     }
-    return tracks;
+    return std::move(tracks);
 }
 
 static std::optional<GMDeviceList> parse_devices(const QByteArray &rawData)
@@ -163,7 +163,7 @@ static std::optional<GMDeviceList> parse_devices(const QByteArray &rawData)
     QJsonParseError error;
     auto doc = QJsonDocument::fromJson(rawData, &error);
     if (!doc.isObject()) {
-        qDebug() << __FUNCTION__ << ": " << error.errorString();
+        qWarning() << error.errorString();
         return std::nullopt;
     }
 
@@ -186,7 +186,7 @@ static std::optional<GMDeviceList> parse_devices(const QByteArray &rawData)
         }
     }
 
-    return devices;
+    return std::move(devices);
 }
 
 static std::optional<GMAlbum> parse_album(const QByteArray &rawData)
@@ -194,7 +194,7 @@ static std::optional<GMAlbum> parse_album(const QByteArray &rawData)
     QJsonParseError error;
     auto doc = QJsonDocument::fromJson(rawData, &error);
     if (!doc.isObject()) {
-        qDebug() << __FUNCTION__ << ": " << error.errorString();
+        qWarning() << error.errorString();
         return std::nullopt;
     }
 
@@ -206,7 +206,7 @@ static std::optional<GMArtist> parse_artist(const QByteArray &rawData)
     QJsonParseError error;
     auto doc = QJsonDocument::fromJson(rawData, &error);
     if (!doc.isObject()) {
-        qDebug() << __FUNCTION__ << ": " << error.errorString();
+        qWarning() << error.errorString();
         return std::nullopt;
     }
 

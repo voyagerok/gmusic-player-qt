@@ -5,6 +5,8 @@
 #include <QSqlQuery>
 #include <QThread>
 
+#include "utils.h"
+
 static QString CONNECTION_NAME = QStringLiteral("DEFAULT_CONNECTION");
 
 Database::Database(QObject *parent) : QObject(parent)
@@ -27,7 +29,7 @@ bool Database::openConnection(const QString &path, QString connName)
     }
     db_.setDatabaseName(path);
     if (!db_.open()) {
-        qDebug() << "Could not open database " << path << ": " << db_.lastError();
+        qWarning() << "Could not open database" << path << ":" << db_.lastError().text();
         return false;
     }
     return true;
@@ -41,14 +43,14 @@ bool Database::createSchema_(QSqlDatabase &db)
     if (!query.exec(QStringLiteral("CREATE TABLE IF NOT EXISTS Artist(id TEXT "
                                    "PRIMARY KEY, name TEXT, artUrl TEXT, bio "
                                    "TEXT)"))) {
-        qDebug() << __FUNCTION__ << ": " << db.lastError();
+        qWarning() << db.lastError();
         return false;
     }
 
     if (!query.exec(QStringLiteral("CREATE TABLE IF NOT EXISTS Album(id TEXT "
                                    "PRIMARY KEY, name TEXT, artUrl TEXT, descr "
                                    "TEXT, year INTEGER)"))) {
-        qDebug() << __FUNCTION__ << ": " << db.lastError();
+        qWarning() << db.lastError();
         return false;
     }
 
@@ -61,7 +63,7 @@ bool Database::createSchema_(QSqlDatabase &db)
                                    "year INTEGER,"
                                    "trackType TEXT,"
                                    "size INTEGER)"))) {
-        qDebug() << __FUNCTION__ << ": " << db.lastError();
+        qWarning() << db.lastError();
         return false;
     }
 
@@ -70,7 +72,7 @@ bool Database::createSchema_(QSqlDatabase &db)
                                    "trackId REFERENCES Track(id), "
                                    "artistId REFERENCES Artist(id),"
                                    "PRIMARY KEY(trackId, artistId))"))) {
-        qDebug() << __FUNCTION__ << ": " << db.lastError();
+        qWarning() << db.lastError();
         return false;
     }
 
@@ -79,7 +81,7 @@ bool Database::createSchema_(QSqlDatabase &db)
                                    "artistId REFERENCES Artist(id), "
                                    "albumId REFERENCES Album(id),"
                                    "PRIMARY KEY(artistId, albumId))"))) {
-        qDebug() << __FUNCTION__ << ": " << db.lastError();
+        qWarning() << db.lastError();
         return false;
     }
 
@@ -94,7 +96,7 @@ std::optional<GMTrackList> Database::tracks_(QSqlDatabase &db)
     if (!query.exec(QStringLiteral(
             "SELECT id, albumId, name, genre, duration, trackNumber, year, trackType, size "
             "from Track"))) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return std::nullopt;
     }
     return extractTracks(db, query);
@@ -108,7 +110,7 @@ Opt<GMTrackList> Database::tracks_for_album(QSqlDatabase &db, const QString &alb
         "FROM Track WHERE albumId = :albumId"));
     query.bindValue(":albumId", albumId);
     if (!query.exec()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return std::nullopt;
     }
     return extractTracks(db, query);
@@ -123,7 +125,7 @@ Opt<GMTrackList> Database::tracks_for_artist(QSqlDatabase &db, const QString &ar
         "FROM Track a JOIN Track2Artist b on (a.id = b.trackId) and b.artistId = :artistId"));
     query.bindValue(":artistId", artistId);
     if (!query.exec()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return std::nullopt;
     }
     return extractTracks(db, query);
@@ -149,14 +151,14 @@ Opt<GMTrackList> Database::extractTracks(QSqlDatabase &db, QSqlQuery &query)
             QStringLiteral("SELECT artistId FROM Track2Artist WHERE trackId = :trackId"));
         artistQuery.bindValue(":trackId", track.id);
         if (!artistQuery.exec()) {
-            qDebug() << __FUNCTION__ << ": could not extract artists for track: " << db.lastError();
+            qWarning() << "could not extract artists for track:" << db.lastError();
         }
         while (artistQuery.next()) {
             track.artistId.append(artistQuery.value(0).toString());
         }
         tracklist.append(track);
     }
-    return tracklist;
+    return std::move(tracklist);
 }
 
 std::optional<GMTrack> Database::track_(QSqlDatabase &db, const QString &id)
@@ -167,7 +169,7 @@ std::optional<GMTrack> Database::track_(QSqlDatabase &db, const QString &id)
         "from Track WHERE id = :trackId"));
     query.bindValue(":trackId", id);
     if (!query.exec()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return std::nullopt;
     }
     GMTrack track;
@@ -187,14 +189,13 @@ std::optional<GMTrack> Database::track_(QSqlDatabase &db, const QString &id)
             QStringLiteral("SELECT artistId FROM Track2Artist WHERE trackId = :trackId"));
         artistQuery.bindValue(":trackId", track.id);
         if (!artistQuery.exec()) {
-            qDebug() << __FUNCTION__
-                     << ": could not get artists for tracks: " << artistQuery.lastError();
+            qWarning() << "could not get artists for tracks" << artistQuery.lastError();
         }
         while (artistQuery.next()) {
             track.artistId.append(artistQuery.value(0).toString());
         }
     }
-    return track;
+    return std::move(track);
 }
 
 bool Database::insertTrack_(QSqlDatabase &db, const GMTrack &track)
@@ -216,7 +217,7 @@ bool Database::insertTrack_(QSqlDatabase &db, const GMTrack &track)
     query.bindValue(":size", track.estimatedSize);
 
     if (!query.exec()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return false;
     }
 
@@ -227,7 +228,7 @@ bool Database::insertTrack_(QSqlDatabase &db, const GMTrack &track)
         artistQuery.bindValue(":trackId", track.id);
         artistQuery.bindValue(":artistId", track.artistId[i]);
         if (!artistQuery.exec()) {
-            qDebug() << __FUNCTION__ << ": " << artistQuery.lastError();
+            qWarning() << artistQuery.lastError();
             return false;
         }
     }
@@ -244,7 +245,7 @@ bool Database::removeTrack_(QSqlDatabase &db, const QString &id)
     query.prepare(QStringLiteral("DELETE FROM Track2Artist WHERE trackId = :trackId"));
     query.bindValue(":trackId", id);
     if (!query.exec()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return false;
     }
 
@@ -252,7 +253,7 @@ bool Database::removeTrack_(QSqlDatabase &db, const QString &id)
     query.prepare(QStringLiteral("DELETE FROM Track WHERE id = :trackId"));
     query.bindValue(":trackId", id);
     if (!query.exec()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return false;
     }
 
@@ -265,7 +266,7 @@ std::optional<GMArtistList> Database::artists_(QSqlDatabase &db)
 {
     QSqlQuery query(db);
     if (!query.exec(QStringLiteral("SELECT id, name, artUrl, bio FROM Artist"))) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return std::nullopt;
     }
 
@@ -279,7 +280,7 @@ std::optional<GMArtistList> Database::artists_(QSqlDatabase &db)
         result.push_back(artist);
     }
 
-    return result;
+    return std::move(result);
 }
 
 std::optional<GMArtist> Database::artist_(QSqlDatabase &db, const QString &id)
@@ -288,12 +289,12 @@ std::optional<GMArtist> Database::artist_(QSqlDatabase &db, const QString &id)
     query.prepare(QStringLiteral("SELECT id, name, artUrl, bio FROM Artist WHERE id = :id"));
     query.bindValue(":id", id);
     if (!query.exec()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return std::nullopt;
     }
 
     if (!query.next()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return std::nullopt;
     }
 
@@ -303,7 +304,7 @@ std::optional<GMArtist> Database::artist_(QSqlDatabase &db, const QString &id)
     artist.artistArtRef = query.value(2).toString();
     artist.artistBio    = query.value(3).toString();
 
-    return artist;
+    return std::move(artist);
 }
 
 bool Database::insertArtist_(QSqlDatabase &db, const GMArtist &artist)
@@ -316,7 +317,7 @@ bool Database::insertArtist_(QSqlDatabase &db, const GMArtist &artist)
     query.bindValue(":artUrl", artist.artistArtRef);
     query.bindValue(":bio", artist.artistBio);
     if (!query.exec()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return false;
     }
 
@@ -328,7 +329,7 @@ std::optional<GMAlbumList> Database::albums_(QSqlDatabase &db)
     QSqlQuery query(db);
     query.prepare(QStringLiteral("SELECT id, name, artUrl, descr, year FROM Album"));
     if (!query.exec()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return std::nullopt;
     }
 
@@ -347,7 +348,7 @@ std::optional<GMAlbumList> Database::albums_(QSqlDatabase &db)
             QStringLiteral("SELECT artistId FROM Artist2Album WHERE albumId = :albumId"));
         artistQuery.bindValue(":albumId", album.albumId);
         if (artistQuery.exec()) {
-            qDebug() << __FUNCTION__ << ": " << artistQuery.lastError();
+            qWarning() << artistQuery.lastError();
         }
         while (artistQuery.next()) {
             album.artistId.append(artistQuery.value(0).toString());
@@ -356,7 +357,7 @@ std::optional<GMAlbumList> Database::albums_(QSqlDatabase &db)
         albums.push_back(album);
     }
 
-    return albums;
+    return std::move(albums);
 }
 
 std::optional<GMAlbumList> Database::albums_for_artist(QSqlDatabase &db, const QString &artistId)
@@ -367,7 +368,7 @@ std::optional<GMAlbumList> Database::albums_for_artist(QSqlDatabase &db, const Q
                        "Artist2Album b ON (a.id = b.albumId) and (b.artistId = :artistId)"));
     query.bindValue(":artistId", artistId);
     if (!query.exec()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return std::nullopt;
     }
 
@@ -386,7 +387,7 @@ std::optional<GMAlbumList> Database::albums_for_artist(QSqlDatabase &db, const Q
             QStringLiteral("SELECT artistId FROM Artist2Album WHERE albumId = :albumId"));
         artistQuery.bindValue(":albumId", album.albumId);
         if (!artistQuery.exec()) {
-            qDebug() << __FUNCTION__ << ": " << artistQuery.lastError();
+            qWarning() << artistQuery.lastError();
         }
         while (artistQuery.next()) {
             album.artistId.append(artistQuery.value(0).toString());
@@ -395,7 +396,7 @@ std::optional<GMAlbumList> Database::albums_for_artist(QSqlDatabase &db, const Q
         albums.push_back(album);
     }
 
-    return albums;
+    return std::move(albums);
 }
 
 std::optional<GMAlbum> Database::album_(QSqlDatabase &db, const QString &id)
@@ -405,7 +406,7 @@ std::optional<GMAlbum> Database::album_(QSqlDatabase &db, const QString &id)
         QStringLiteral("SELECT id, name, artUrl, descr, year FROM Album WHERE id = :albumId"));
     query.bindValue(":albumId", id);
     if (!query.exec()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return std::nullopt;
     }
 
@@ -423,14 +424,14 @@ std::optional<GMAlbum> Database::album_(QSqlDatabase &db, const QString &id)
             QStringLiteral("SELECT artistId FROM Artist2Album WHERE albumId = :albumId"));
         artistQuery.bindValue(":albumId", album.albumId);
         if (!artistQuery.exec()) {
-            qDebug() << __FUNCTION__ << ": " << artistQuery.lastError();
+            qWarning() << artistQuery.lastError();
         }
         while (artistQuery.next()) {
             album.artistId.append(artistQuery.value(0).toString());
         }
     }
 
-    return album;
+    return std::move(album);
 }
 
 bool Database::insertAlbum_(QSqlDatabase &db, const GMAlbum &album)
@@ -447,7 +448,7 @@ bool Database::insertAlbum_(QSqlDatabase &db, const GMAlbum &album)
     query.bindValue(":descr", album.description);
     query.bindValue(":year", album.year);
     if (!query.exec()) {
-        qDebug() << __FUNCTION__ << ": " << query.lastError();
+        qWarning() << query.lastError();
         return false;
     }
     query.finish();
@@ -458,7 +459,7 @@ bool Database::insertAlbum_(QSqlDatabase &db, const GMAlbum &album)
         query.bindValue(":artistId", album.artistId[i]);
         query.bindValue(":albumId", album.albumId);
         if (!query.exec()) {
-            qDebug() << __FUNCTION__ << ": " << query.lastError();
+            qWarning() << query.lastError();
         }
         query.finish();
     }
